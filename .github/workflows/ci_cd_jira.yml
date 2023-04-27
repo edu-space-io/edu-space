@@ -1,0 +1,48 @@
+name: Create Jira issue on PR open
+on:
+  pull_request:
+    types: [opened]
+jobs:
+  create_jira_issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x' # use the latest python 3.x version available on the runner machine
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Get PR details
+        id: pr-details
+        run: |
+          echo "::set-output name=branch::${{ github.event.pull_request.head.ref }}"
+          echo "::set-output name=title::${{ github.event.pull_request.title }}"
+          echo "::set-output name=description::${{ github.event.pull_request.body }}"
+      - name: Create Jira issue
+        env:
+          JIRA_URL: ${{ secrets.JIRA_URL }}
+          PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+          ISSUE_TYPE: ${{ secrets.JIRA_ISSUE_TYPE }}
+          JIRA_AUTH: ${{ secrets.JIRA_AUTH }}
+        run: |
+          curl -s -X POST \
+          --url "${JIRA_URL}/rest/api/2/issue/" \
+          --header "Content-Type: application/json" \
+          --header "Accept: application/json" \
+          --user "${JIRA_AUTH}" \
+          -d '{
+              "fields": {
+                  "project": {
+                      "key": "'"${PROJECT_KEY}"'"
+                  },
+                  "issuetype": {
+                      "name": "'"${ISSUE_TYPE}"'"
+                  },
+                  "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}/}}#${{ github.event.pull_request.number }}"'",
+                  "description": "'"${{ steps.pr-details.outputs.description }}"'"
+              }
+          }'
