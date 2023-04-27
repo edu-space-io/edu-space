@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="card mt-3">
+        <div class="card-header">
+            <nav class="navbar navbar-light justify-content-between">
+                <h5 class="navbar-brand"><strong>Продукты</strong></h5>
+                {% dump %}
+                <a class="btn btn-sm btn-warning my-2 my-sm-0" href="{{ path('cart.index') }}"
+                   type="button">
+                    {{ arrow_right|raw }}
+                    {{ cart|raw }}
+                </a>
+            </nav>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm table table-hover">
+                <thead>
+                <tr>
+                    <th scope="col" class="col-md-1">#</th>
+                    <th scope="col" class="col-md-9">Название</th>
+                    <th scope="col" class="col-md-1">Цена</th>
+                    <th scope="col" class="col-md-1">Валюта</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% if products is not empty %}
+                    {% for product in products %}
+                        <tr onclick="window.location.href='{{ path('products.show', {'id': product.id}) }}'">
+                        <tr>
+                            <th scope="row" class="col-md-1">{{ product.id }}</th>
+                            <th class="col-md-11">{{ product.name }}</th>
+                            <th class="col-md-0 text-center">{{ product.price }}</th>
+                            <th class="col-md-0">{{ product.presentCurrency|raw }}</th>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr class="no-data text-center">
+                        <td colspan="12">Нет продуктов для отображения</td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {#        @if($products->hasPages()) #}
+        {#            <div class="card-footer"> #}
+        {#                {{ $products->links('pagination.default') }} #}
+        {#            </div> #}
+        {#        @endif #}
+    </div>
+{% endblock %}

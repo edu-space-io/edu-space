@@ -1,0 +1,4 @@
+knp_paginator:
+  template:
+    pagination: '@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig' # You can choose a different template
+    sortable: '@KnpPaginator/Pagination/twitter_bootstrap_v4_sortable_link.html.twig' # You can choose a different template

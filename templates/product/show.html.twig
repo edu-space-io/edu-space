@@ -1,0 +1,70 @@
+{% extends base %}
+
+{% block body %}
+    <div class="card mt-3">
+        <div class="card-header">
+            <nav class="navbar navbar-light bg-light justify-content-between">
+                <a class="navbar-brand">{{ $product->name }}</a>
+                <a class="btn btn-sm btn-outline-secondary my-2 my-sm-0" href="{{ route('products.index') }}"
+                   type="button">
+                    {{ arrow_left|raw }}
+                </a>
+            </nav>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm table-striped">
+                <tbody>
+                <tr>
+                    <th scope="row" class="col-md-3">#</th>
+                    <th class="col-md-9">{{ product.id }}</th>
+                </tr>
+                <tr>
+                    <th scope="row" class="col-md-3">Название</th>
+                    <th class="col-md-9">{{ product.name }}</th>
+                </tr>
+                <tr>
+                    <th scope="row" class="col-md-3">Описание</th>
+                    <th class="col-md-9">{{ product.description }}</th>
+                </tr>
+                <tr>
+                    <th scope="row" class="col-md-3">Цена</th>
+                    <th class="col-md-9">{{ product.presentPrice }}</th>
+                </tr>
+                </tbody>
+            </table>
+
+            <button id="add-to-cart-btn"
+                    {% if product.existsInCart is not empty %} hidden {% endif %}
+                    class="btn btn-success"
+                    title="Добавить в корзину"
+                    data-action="{{ path('products.add-to-cart', {'product_id': product.getId }}"
+                    data-id="{{ product.getId }}"
+                    onclick="addToCart(this)">
+                <i>{{ add_to_cart|raw }}</i>
+            </button>
+            <a id="go-to-cart-btn"
+               {% if product.existsInCart is not empty %} hidden {% endif %}
+               href="{{ path('cart.index') }}"
+               class="btn btn-warning"
+               title="Перейти в корзину">
+                <i>{{ arrow_right|raw }}</i>
+                <i>{{ cart|raw }}</i>
+            </a>
+        </div>
+    </div>
+{%  endblock %}
+
+{% extends javascript %}
+    <script>
+        function addToCart(e) {
+            axios.put(e.dataset.action)
+                .then(response => {
+                    e.hidden = true;
+                    document.getElementById('go-to-cart-btn').hidden = false;
+                })
+                .catch(error => {
+
+                });
+        }
+    </script>
+{% endblock %}
