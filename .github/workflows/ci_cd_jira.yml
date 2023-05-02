@@ -33,11 +33,10 @@ jobs:
                   "issuetype": {
                       "name": "'"${ISSUE_TYPE}"'"
                   },
-                  "summary": "'"${env.TITLE} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}/#${{ github.event.pull_request.number }}"'",
+                  "summary": "'"${{ env.TITLE }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}/}}#${{ github.event.pull_request.number }}"'"
                   "description": "'"${{ env.DESCRIPTION }}"'",
                   "assignee": {
                       "name": "'"${{ env.ASSIGNEE }}"'"
                   }
               }
           }'
-
