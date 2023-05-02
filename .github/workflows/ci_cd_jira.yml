@@ -6,24 +6,13 @@ jobs:
   create_jira_issue:
     runs-on: ubuntu-latest
     steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#      - name: Set up Python
-#        uses: actions/setup-python@v2
-#        with:
-#          python-version: '3.x' # use the latest python 3.x version available on the runner machine
-#      - name: Install dependencies
-#        run: |
-#          python -m pip install --upgrade pip
-#          pip install -r requirements.txt
       - name: Get PR details
         id: pr-details
         run: |
-          echo "::set-output name=branch::${{ github.event.pull_request.head.ref }}"
-          echo "::set-output name=title::${{ github.event.pull_request.title }}"
-          echo "::set-output name=assignee::${{ github.event.pull_request.assignees }}"
-          echo "::set-output name=description::${{ github.event.pull_request.body }}"
-          echo "::set-output name=assignee::${{ github.event.pull_request.user.login }}"
+          echo "BRANCH=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+          echo "TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+          echo "DESCRIPTION=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
+          echo "ASSIGNEE=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
       - name: Create Jira issue
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
@@ -44,10 +33,11 @@ jobs:
                   "issuetype": {
                       "name": "'"${ISSUE_TYPE}"'"
                   },
-                  "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}/#${{ github.event.pull_request.number }}"'",
-                  "description": "'"${{ steps.pr-details.outputs.description }}"'"
+                  "summary": "'"${env.TITLE} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}/#${{ github.event.pull_request.number }}"'",
+                  "description": "'"${{ env.DESCRIPTION }}"'",
                   "assignee": {
-                      "name": "'"${{ steps.pr-details.outputs.assignee }}"'"
+                      "name": "'"${{ env.ASSIGNEE }}"'"
                   }
               }
           }'
+
