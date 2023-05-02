@@ -15,11 +15,6 @@ jobs:
           echo "title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
           echo "description=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
           echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
-      - name: Set environment variables
-        run: |
-          source "${GITHUB_WORKSPACE}/jira-accounts.env"
-          echo "${GITHUB_WORKSPACE}"
-          echo "ASSIGNEE=${env[${assignee}]}" >> $GITHUB_ENV
       - name: Create Jira issue
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
@@ -43,7 +38,7 @@ jobs:
                   "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ github.event.pull_request.number }}"'",
                   "description": "'"${{ steps.pr-details.outputs.description }}"'",
                   "assignee": {
-                      "name": "'"${ASSIGNEE}"'"
+                      "name": "'"${env.alchibekov}"'"
                   }
               }
           }'
