@@ -5,8 +5,8 @@ on:
 jobs:
   create_jira_issue:
     runs-on: ubuntu-latest
-#    env:
-#      JIRA_ACCOUNTS: /jira-accounts.env
+    env:
+      alchibekov: atm.linderman@gmail.com
     steps:
       - name: Get PR details
         id: pr-details
@@ -17,7 +17,8 @@ jobs:
           echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
       - name: Set environment variables
         run: |
-          source "jira-accounts.env"
+          source "${GITHUB_WORKSPACE}/jira-accounts.env"
+          echo "${GITHUB_WORKSPACE}"
           echo "ASSIGNEE=${env[${assignee}]}" >> $GITHUB_ENV
       - name: Create Jira issue
         env:
