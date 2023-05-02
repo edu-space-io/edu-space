@@ -41,7 +41,7 @@ jobs:
                   "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}/}}#${{ github.event.pull_request.number }}"'",
                   "description": "'"${{ steps.pr-details.outputs.description }}"'",
                   "assignee": {
-                      "name": "'"${ASSIGNEE}"'"
+                      "name": "'"${{ env.ASSIGNEE }}"'"
                   }
               }
           }'
