@@ -6,7 +6,7 @@ jobs:
   create_jira_issue:
     runs-on: ubuntu-latest
     env:
-      JIRA_ACCOUNTS: /jira-accounts.env
+      alchibekov: atm.linderman@gmail.com
     steps:
       - name: Get PR details
         id: pr-details
@@ -14,9 +14,7 @@ jobs:
           echo "branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
           echo "title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
           echo "description=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
-#          echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
-      - name: Load environment variables
-        run: echo "ASSIGNEE=${{ github.event.pull_request.user.login }}" && env | grep ${{ github.event.pull_request.user.login }} >> $GITHUB_ENV
+          echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
       - name: Create Jira issue
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
@@ -37,10 +35,10 @@ jobs:
                   "issuetype": {
                       "name": "'"${ISSUE_TYPE}"'"
                   },
-                  "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}/}}#${{ github.event.pull_request.number }}"'",
+                  "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ github.event.pull_request.number }}"'",
                   "description": "'"${{ steps.pr-details.outputs.description }}"'",
                   "assignee": {
-                      "name": "'"${{ env.ASSIGNEE }}"'"
+                      "emailAddress": "'"${{ env.alchibekov }}"'"
                   }
               }
           }'
