@@ -18,7 +18,7 @@ jobs:
       - name: Set environment variables
         run: |
           source: .github/jira-accounts.env
-          echo "ASSIGNEE=${{ env[ALCHIBEKOV] }}" >> $GITHUB_ENV
+          echo "ASSIGNEE=${{ env[${assignee}] }}" >> $GITHUB_ENV
       - name: Create Jira issue
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
