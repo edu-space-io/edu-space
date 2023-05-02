@@ -18,7 +18,7 @@ jobs:
       - name: Set environment variables
         run: |
           source: .github/jira-accounts.env
-          echo "ASSIGNEE=${{ env[${assignee}] }}" >> $GITHUB_ENV
+          echo "ASSIGNEE=${env[${assignee}]}" >> $GITHUB_ENV
       - name: Create Jira issue
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
@@ -39,7 +39,7 @@ jobs:
                   "issuetype": {
                       "name": "'"${ISSUE_TYPE}"'"
                   },
-                  "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}/}}#${{ github.event.pull_request.number }}"'",
+                  "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ github.event.pull_request.number }}"'",
                   "description": "'"${{ steps.pr-details.outputs.description }}"'",
                   "assignee": {
                       "name": "'"${ASSIGNEE}"'"
