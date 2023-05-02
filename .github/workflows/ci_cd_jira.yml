@@ -25,7 +25,6 @@ jobs:
           PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
           ISSUE_TYPE: ${{ secrets.JIRA_ISSUE_TYPE }}
           JIRA_AUTH: ${{ secrets.JIRA_AUTH }}
-          ASSIGNEE: ${ALCHIBEKOV}
         run: |
           curl -s -X POST \
           --url "${JIRA_URL}/rest/api/2/issue/" \
