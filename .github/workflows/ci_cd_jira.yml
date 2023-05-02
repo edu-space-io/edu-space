@@ -9,10 +9,10 @@ jobs:
       - name: Get PR details
         id: pr-details
         run: |
-          echo "BRANCH=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
-          echo "TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
-          echo "DESCRIPTION=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
-          echo "ASSIGNEE=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
+          echo "branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+          echo "title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+          echo "description=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
+          echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
       - name: Create Jira issue
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
@@ -33,10 +33,10 @@ jobs:
                   "issuetype": {
                       "name": "'"${ISSUE_TYPE}"'"
                   },
-                  "summary": "'"${{ env.TITLE }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}/}}#${{ github.event.pull_request.number }}"'"
-                  "description": "'"${{ env.DESCRIPTION }}"'",
+                  "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}/}}#${{ github.event.pull_request.number }}"'",
+                  "description": "'"${{ steps.pr-details.outputs.description }}"'",
                   "assignee": {
-                      "name": "'"${{ env.ASSIGNEE }}"'"
+                      "name": "'"${{ steps.pr-details.outputs.assignee }}"'"
                   }
               }
           }'
