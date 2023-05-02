@@ -17,7 +17,7 @@ jobs:
           echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
       - name: Set environment variables
         run: |
-          source jira-accounts.env
+          source "${{ github.workspace }}/jira-accounts.env"
           echo "ASSIGNEE=${env[${assignee}]}" >> $GITHUB_ENV
       - name: Create Jira issue
         env:
