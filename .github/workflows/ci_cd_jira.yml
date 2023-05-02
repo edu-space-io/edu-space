@@ -16,14 +16,14 @@ jobs:
           echo "description=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
 #          echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
       - name: Load environment variables
-        run: echo "ASSIGNEE=${{ github.event.pull_request.user.login }}" && env | grep ${{ github.event.pull_request.user.login }} >> $GITHUB_ENV
+        run: echo "ASSIGNEE=${{ github.event.pull_request.user.login }}" && source $JIRA_ACCOUNTS
       - name: Create Jira issue
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
           PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
           ISSUE_TYPE: ${{ secrets.JIRA_ISSUE_TYPE }}
           JIRA_AUTH: ${{ secrets.JIRA_AUTH }}
-          ASSIGNEE: ${{ env.ASSIGNEE }}
+          ASSIGNEE: ${{ ALCHIBEKOV }}
         run: |
           curl -s -X POST \
           --url "${JIRA_URL}/rest/api/2/issue/" \
@@ -41,7 +41,7 @@ jobs:
                   "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}/}}#${{ github.event.pull_request.number }}"'",
                   "description": "'"${{ steps.pr-details.outputs.description }}"'",
                   "assignee": {
-                      "name": "'"${{ env.ASSIGNEE }}"'"
+                      "name": "'"${ASSIGNEE}"'"
                   }
               }
           }'
