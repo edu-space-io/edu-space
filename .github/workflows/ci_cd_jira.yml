@@ -6,8 +6,8 @@ jobs:
   create_jira_issue:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+#      - name: Checkout code
+#        uses: actions/checkout@v2
 #      - name: Set up Python
 #        uses: actions/setup-python@v2
 #        with:
@@ -21,7 +21,9 @@ jobs:
         run: |
           echo "::set-output name=branch::${{ github.event.pull_request.head.ref }}"
           echo "::set-output name=title::${{ github.event.pull_request.title }}"
+          echo "::set-output name=assignee::${{ github.event.pull_request.assignees }}"
           echo "::set-output name=description::${{ github.event.pull_request.body }}"
+          echo "::set-output name=assignee::${{ github.event.pull_request.user.login }}"
       - name: Create Jira issue
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
@@ -42,7 +44,10 @@ jobs:
                   "issuetype": {
                       "name": "'"${ISSUE_TYPE}"'"
                   },
-                  "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}/}}#${{ github.event.pull_request.number }}"'",
+                  "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}/#${{ github.event.pull_request.number }}"'",
                   "description": "'"${{ steps.pr-details.outputs.description }}"'"
+                  "assignee": {
+                      "name": "'"${{ steps.pr-details.outputs.assignee }}"'"
+                  }
               }
           }'
