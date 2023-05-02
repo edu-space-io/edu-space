@@ -5,23 +5,18 @@ on:
 jobs:
   create_jira_issue:
     runs-on: ubuntu-latest
+    env:
+      JIRA_ACCOUNTS: /jira-accounts.env
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x' # use the latest python 3.x version available on the runner machine
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
       - name: Get PR details
         id: pr-details
         run: |
-          echo "::set-output name=branch::${{ github.event.pull_request.head.ref }}"
-          echo "::set-output name=title::${{ github.event.pull_request.title }}"
-          echo "::set-output name=description::${{ github.event.pull_request.body }}"
+          echo "branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+          echo "title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+          echo "description=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
+#          echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
+      - name: Load environment variables
+        run: echo "ASSIGNEE=${{ github.event.pull_request.user.login }}" && env | grep ${{ github.event.pull_request.user.login }} >> $GITHUB_ENV
       - name: Create Jira issue
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
@@ -43,6 +38,9 @@ jobs:
                       "name": "'"${ISSUE_TYPE}"'"
                   },
                   "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}/}}#${{ github.event.pull_request.number }}"'",
-                  "description": "'"${{ steps.pr-details.outputs.description }}"'"
+                  "description": "'"${{ steps.pr-details.outputs.description }}"'",
+                  "assignee": {
+                      "name": "'"${{ env.ASSIGNEE }}"'"
+                  }
               }
           }'
