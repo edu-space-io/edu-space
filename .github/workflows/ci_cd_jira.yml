@@ -5,8 +5,8 @@ on:
 jobs:
   create_jira_issue:
     runs-on: ubuntu-latest
-    env:
-      JIRA_ACCOUNTS: /jira-accounts.env
+#    env:
+#      JIRA_ACCOUNTS: /jira-accounts.env
     steps:
       - name: Get PR details
         id: pr-details
@@ -14,9 +14,11 @@ jobs:
           echo "branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
           echo "title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
           echo "description=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
-#          echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
-      - name: Load environment variables
-        run: echo "ASSIGNEE=${{ github.event.pull_request.user.login }}" && source $JIRA_ACCOUNTS
+          echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
+      - name: Set environment variables
+        run: |
+          source: .github/jira-accounts.env
+          echo "ASSIGNEE=${{ env[ALCHIBEKOV] }}" >> $GITHUB_ENV
       - name: Create Jira issue
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
