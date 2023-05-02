@@ -21,6 +21,8 @@ jobs:
           PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
           ISSUE_TYPE: ${{ secrets.JIRA_ISSUE_TYPE }}
           JIRA_AUTH: ${{ secrets.JIRA_AUTH }}
+          DESCRIPTION: ${{ steps.pr-details.outputs.description }}
+          ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
         run: |
           curl -s -X POST \
           --url "${JIRA_URL}/rest/api/2/issue/" \
@@ -36,9 +38,9 @@ jobs:
                       "name": "'"${ISSUE_TYPE}"'"
                   },
                   "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ github.event.pull_request.number }}"'",
-                  "description": "'"${{ steps.pr-details.outputs.description }}"'",
+                  "description": "'"${DESCRIPTION}"'",
                   "assignee": {
-                      "accountId": "'"${{ env.${assignee} }}"'"
+                      "accountId": "'"${{ env.${ASSIGNEE} }}"'"
                   }
               }
           }'
