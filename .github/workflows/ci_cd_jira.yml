@@ -24,9 +24,9 @@ jobs:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
           ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
           COLLABORATORS: |
-            alchibekov: "5c2f993ed254b55db84cb3e1"
-            atmlinderman: "712020:2ebe3066-df60-45f0-9653-0545cc9ebacc"
-            eduspace312: "712020:21e3a790-9137-4db1-8aba-5b92f5461de4"
+            alchibekov: 5c2f993ed254b55db84cb3e1
+            atmlinderman: 712020:2ebe3066-df60-45f0-9653-0545cc9ebacc
+            eduspace312: 712020:21e3a790-9137-4db1-8aba-5b92f5461de4
         run: |
           # Create parent Jira issue
           curl -s -X POST \
