@@ -23,7 +23,7 @@ jobs:
           JIRA_AUTH: ${{ secrets.JIRA_AUTH }}
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
           ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
-          COLLABORATORS:
+          COLLABORATORS: |
             alchibekov: 5c2f993ed254b55db84cb3e1
             atmlinderman: 712020:2ebe3066-df60-45f0-9653-0545cc9ebacc
             eduspace312: 712020:21e3a790-9137-4db1-8aba-5b92f5461de4
@@ -56,26 +56,4 @@ jobs:
           # Create subtask for each reviewer
           for reviewer in $(echo ${{ steps.pr-details.outputs.reviewers }} | tr ',' '\n'); do
             echo "Creating subtask for ${{ env.COLLABORATORS[reviewer] }}"
-#            curl -s -X POST \
-#            --url "${JIRA_URL}/rest/api/2/issue/" \
-#            --header "Content-Type: application/json" \
-#            --header "Accept: application/json" \
-#            --user "${JIRA_AUTH}" \
-#            -d '{
-#                "fields": {
-#                    "project": {
-#                        "key": "'"${PROJECT_KEY}"'"
-#                    },
-#                    "parent": {
-#                        "key": "'"${ISSUE_KEY}"'"
-#                    },
-#                    "issuetype": {
-#                        "name": "Sub-task"
-#                    },
-#                    "summary": "'"${{ steps.pr-details.outputs.title }} - Review by ${reviewer} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
-#                    "assignee": {
-#                      "name": "'"${{ env[${reviewer}] }}"'"
-#                    }
-#                }
-#            }' > /dev/null
           done
