@@ -55,5 +55,5 @@ jobs:
           
           # Create subtask for each reviewer
           for reviewer in $(echo ${{ steps.pr-details.outputs.reviewers }} | tr ',' '\n'); do
-            echo "Creating subtask for ${{ env.COLLABORATORS[reviewer] }}"
+            echo "Creating subtask for ${{ env.COLLABORATORS[${reviewer}] }}"
           done
