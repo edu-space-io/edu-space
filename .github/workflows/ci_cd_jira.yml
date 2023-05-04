@@ -40,7 +40,7 @@ jobs:
                   "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ github.event.pull_request.number }}"'",
                   "description": "'"${DESCRIPTION}"'",
                   "assignee": {
-                    "accountId": ${{ env['${ASSIGNEE}'] }}
+                    "accountId": "'"${{ env['${ASSIGNEE}'] }}"'"
                   }
               }
           }'
