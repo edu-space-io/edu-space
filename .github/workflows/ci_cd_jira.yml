@@ -5,16 +5,17 @@ on:
 jobs:
   create_jira_issue:
     runs-on: ubuntu-latest
-    env:
-      alchibekov: 5c2f993ed254b55db84cb3e1
     steps:
       - name: Get PR details
+        env:
+          alchibekov: 5c2f993ed254b55db84cb3e1
         id: pr-details
         run: |
           echo "branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
           echo "title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
           echo "description=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
-          echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
+          echo "assignee=${{ env[github.event.pull_request.user.login] }}" >> $GITHUB_OUTPUT
+          echo "number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
       - name: Create Jira issue
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
@@ -37,7 +38,7 @@ jobs:
                   "issuetype": {
                       "name": "'"${ISSUE_TYPE}"'"
                   },
-                  "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ github.event.pull_request.number }}"'",
+                  "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
                   "description": "'"${DESCRIPTION}"'",
                   "assignee": {
                     "accountId": ${{ env.alchibekov }}
