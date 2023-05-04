@@ -41,7 +41,7 @@ jobs:
                   "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
                   "description": "'"${DESCRIPTION}"'",
                   "assignee": {
-                    "accountId": ${{ steps.pr-details.outputs.assignee }}
+                    "accountId": "'"${{ steps.pr-details.outputs.assignee }}"'"
                   }
               }
           }'
