@@ -6,7 +6,7 @@ jobs:
   create_jira_issue:
     runs-on: ubuntu-latest
     env:
-      alchibekov: '5c2f993ed254b55db84cb3e1'
+      alchibekov: 5c2f993ed254b55db84cb3e1
     steps:
       - name: Get PR details
         id: pr-details
@@ -40,7 +40,7 @@ jobs:
                   "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ github.event.pull_request.number }}"'",
                   "description": "'"${DESCRIPTION}"'",
                   "assignee": {
-                    "accountId": "'"${{ env['${ASSIGNEE}'] }}"'"
+                    "accountId": "'"${{ env.alchibekov }}"'"
                   }
               }
           }'
