@@ -71,7 +71,7 @@ jobs:
                     },
                     "summary": "'"${{ steps.pr-details.outputs.title }} - Review by ${reviewer} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
                     "assignee": {
-                      "name": "'"${{ env[reviewer] }}"'"
+                      "name": "'"${{ env[${reviewer}] }}"'"
                     }
                 }
             }' > /dev/null
