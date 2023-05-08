@@ -25,8 +25,8 @@ jobs:
         env:
           COLLABORATORS_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
         run: |
-          mapped_collaborators=$(echo "${COLLABORATORS_JSON}" | jq -r '.mapping')
-          echo "mapped-collaborators: ${{ $mapped_collaborators }}" >> $GITHUB_OUTPUT
+          mapped_collaborators=$(echo "${{ env.COLLABORATORS_JSON }}" | jq -r '.mapping')
+          echo "mapped-collaborators: ${mapped_collaborators}" >> $GITHUB_OUTPUT
       - name: Create Jira issue for assignee
         id: create-assigned-issue
         env:
@@ -34,25 +34,25 @@ jobs:
           ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
           COLLABORATORS: ${{ steps.get-collaborators.outputs.mapped-collaborators }}
         run: |
-          key=${ASSIGNEE}
+          key=${{ env.ASSIGNEE }}
           echo "ASSIGNEE: ${ASSIGNEE}"
-          assignee_id=$(jq -r --arg key "${ASSIGNEE}" '.[$key]' <<<"${COLLABORATORS}")
+          assignee_id=$(jq -r --arg key "${{ env.ASSIGNEE }}" '.[$key]' <<<"${{ env.COLLABORATORS }}")
           echo "ASSIGNEE ID: ${assignee_id}"
           curl -s -X POST \
-          --url "${JIRA_URL}/rest/api/2/issue/" \
+          --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
           --header "Content-Type: application/json" \
           --header "Accept: application/json" \
-          --user "${JIRA_AUTH}" \
+          --user "${{ env.JIRA_AUTH }}" \
           -d '{
             "fields": {
               "project": {
-                  "key": "'"${PROJECT_KEY}"'"
+                  "key": "'"${{ env.PROJECT_KEY }}"'"
               },
               "issuetype": {
-                  "name": "'"${ISSUE_TYPE}"'"
+                  "name": "'"${{ env.ISSUE_TYPE }}"'"
               },
               "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
-              "description": "'"${DESCRIPTION}"'",
+              "description": "'"${{ env.DESCRIPTION }}"'",
               "assignee": {
                 "accountId": "'"${assignee_id}"'"
               }
@@ -70,7 +70,7 @@ jobs:
           REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
           COLLABORATORS: ${{ steps.get-collaborators.outputs.mapped-collaborators }}
         run: |
-          for reviewer in $(echo ${REVIEWERS} | tr ',' '\n'); do
+          for reviewer in $(echo ${{ env.REVIEWERS }} | tr ',' '\n'); do
             key=${reviewer}
             reviewer_id=$(jq -r --arg key "${reviewer}" '.[$key]' <<<"${COLLABORATORS}")
             echo "Reviewer: ${reviewer_id}"
@@ -82,10 +82,10 @@ jobs:
             -d '{
               "fields": {
                 "project": {
-                    "key": "'"${PROJECT_KEY}"'"
+                    "key": "'"${{ env.PROJECT_KEY }}"'"
                   },
                   "parent": {
-                    "key": "'"${ASSIGNEE_ISSUE_KEY}"'"
+                    "key": "'"${{ env.ASSIGNEE_ISSUE_KEY }}"'"
                   },
                   "issuetype": {
                     "name": "Sub-task"
