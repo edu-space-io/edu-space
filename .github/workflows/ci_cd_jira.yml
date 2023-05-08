@@ -1,7 +1,7 @@
 name: Create Jira issue on PR open
 on:
   pull_request:
-    types: [opened]
+    types: [ opened ]
 jobs:
   create_jira_issue:
     runs-on: ubuntu-latest
@@ -26,11 +26,11 @@ jobs:
           REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
           COLLABORATORS_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
         run: |
-          MAP=$(echo "${COLLABORATORS_JSON}" | jq -r '.mapping')
-          echo "MAP: ${MAP}"
+          MAPPED_COLLABORATORS=$(echo "${COLLABORATORS_JSON}" | jq -r '.mapping')
+          echo "MAPPED_COLLABORATORS: ${MAPPED_COLLABORATORS}"
           key=${ASSIGNEE}
           echo "ASSIGNEE: ${ASSIGNEE}"
-          assignee_id=$(jq -r --arg key "${ASSIGNEE}" '.[$key]' <<<"${MAP}")
+          assignee_id=$(jq -r --arg key "${ASSIGNEE}" '.[$key]' <<<"${MAPPED_COLLABORATORS}")
           echo "ASSIGNEE ID: ${assignee_id}"
           curl -s -X POST \
           --url "${JIRA_URL}/rest/api/2/issue/" \
@@ -53,11 +53,35 @@ jobs:
             }
           }' > jira-issue.json
           
+          cat jira-issue.json
           # Parse issue key from Jira response
           ISSUE_KEY=$(cat jira-issue.json | jq -r '.key')
           echo "Jira issue created: ${ISSUE_KEY}"
           
-          COLLABORATORS=()
-          while IFS= read -r reviewer; do
-            echo "Reviewer: ${reviewer}"
-          done < <(jq -r '.[] | .login' <<<"${REVIEWERS}")
+          # Create subtask for each reviewer
+          for reviewer in $(echo ${{ steps.pr-details.outputs.reviewers }} | tr ',' '\n'); do
+            reviewer_id=$(jq -r --arg key "${reviewer}" '.[$reviewer]' <<<"${MAPPED_COLLABORATORS}")
+            curl -s -X POST \
+            --url "${JIRA_URL}/rest/api/2/issue/" \
+            --header "Content-Type: application/json" \
+            --header "Accept: application/json" \
+            --user "${JIRA_AUTH}" \
+            -d '{
+              "fields": {
+                "project": {
+                    "key": "'"${PROJECT_KEY}"'"
+                  },
+                  "parent": {
+                    "key": "'"${ISSUE_KEY}"'"
+                  },
+                  "issuetype": {
+                    "name": "Sub-task"
+                  },
+                  "summary": "'"${{ steps.pr-details.outputs.title }} - Review by ${reviewer} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
+                  "assignee": {
+                    "name": "'"${reviewer_id}"'"
+                  }
+              }
+            }
+          }' > /dev/null
+          done
