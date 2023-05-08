@@ -25,14 +25,14 @@ jobs:
         env:
           COLLABORATORS_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
         run: |
-          mappedcollaborators=$(echo "${{ env.COLLABORATORS_JSON }}" | jq -r '.mapping')
-          echo "mapped: ${mappedcollaborators}" >> $GITHUB_OUTPUT
+          MAP=$(echo "${{ env.COLLABORATORS_JSON }}" | jq -r '.mapping')
+          echo "mapped-collaborators: ${MAP}" >> $GITHUB_OUTPUT
       - name: Create Jira issue for assignee
         id: create-assigned-issue
         env:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
           ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
-          COLLABORATORS: ${{ steps.get-collaborators.outputs.mapped }}
+          COLLABORATORS: ${{ steps.get-collaborators.outputs.mapped-collaborators }}
         run: |
           key=${{ env.ASSIGNEE }}
           echo "ASSIGNEE: ${ASSIGNEE}"
@@ -68,7 +68,7 @@ jobs:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
           ASSIGNEE_ISSUE_KEY: ${{ steps.pr-details.outputs.assignee-issue-key }}
           REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
-          COLLABORATORS: ${{ steps.get-collaborators.outputs.mapped }}
+          COLLABORATORS: ${{ steps.get-collaborators.outputs.mapped-collaborators }}
         run: |
           for reviewer in $(echo ${{ env.REVIEWERS }} | tr ',' '\n'); do
             key=${reviewer}
