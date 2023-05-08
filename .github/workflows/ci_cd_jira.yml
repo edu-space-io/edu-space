@@ -27,8 +27,10 @@ jobs:
           COLLABORATORS_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
         run: |
           MAP=$(echo "${COLLABORATORS_JSON}" | jq -r '.mapping')
-          assignee_id=$(jq -r --arg assignee "${steps.pr-details.outputs.assignee}" '.[steps.pr-details.outputs.assignee]' <<<"${MAP}")
-          
+          echo "MAP: ${MAP}"
+          echo "ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}"
+          assignee_id=$(jq -r --arg assignee "${steps.pr-details.outputs.assignee}" '.[env.assignee]' <<<"${MAP}")
+          echo "ASSIGNEE ID: ${assignee_id}"
           curl -s -X POST \
           --url "${JIRA_URL}/rest/api/2/issue/" \
           --header "Content-Type: application/json" \
