@@ -58,4 +58,7 @@ jobs:
             COLLABORATOR=${COLLABORATORS[$reviewer]}
             JIRA_ACCOUNT_ID=${COLLABORATOR#*:} # Удалить все символы до первого двоеточия
             echo "Creating subtask for ${reviewer} (${JIRA_ACCOUNT_ID})"
+         
+            readarray -t COLLABORATORS_ARRAY <<< "$COLLABORATORS"
+            echo "COLLABORATORS_ARRAY: ${COLLABORATORS_ARRAY[@]}"
           done
