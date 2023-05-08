@@ -26,7 +26,6 @@ jobs:
           REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
           MAPPING_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
         run: |
-          # Create parent Jira issue
           curl -s -X POST \
           --url "${JIRA_URL}/rest/api/2/issue/" \
           --header "Content-Type: application/json" \
