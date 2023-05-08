@@ -60,26 +60,26 @@ jobs:
               exit 1
             fi
             curl -s -X POST \
-              --url "${JIRA_URL}/rest/api/2/issue/" \
-              --header "Content-Type: application/json" \
-              --header "Accept: application/json" \
-              --user "${JIRA_AUTH}" \
-                -d '{
-                  "fields": {
-                    "project": {
-                        "key": "'"${PROJECT_KEY}"'"
-                    },
-                    "parent": {
-                        "key": "'"${ISSUE_KEY}"'"
-                    },
-                    "issuetype": {
-                        "name": "Sub-task"
-                    },
-                    "summary": "'"${{ steps.pr-details.outputs.title }} - Review by ${reviewer} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
-                    "assignee": {
-                      "name": "'"${jira_id}"'"
-                    }
-                  }
-                }' > /dev/null
+            --url "${JIRA_URL}/rest/api/2/issue/" \
+            --header "Content-Type: application/json" \
+            --header "Accept: application/json" \
+            --user "${JIRA_AUTH}" \
+            -d '{
+              "fields": {
+                "project": {
+                    "key": "'"${PROJECT_KEY}"'"
+                },
+                "parent": {
+                    "key": "'"${ISSUE_KEY}"'"
+                },
+                "issuetype": {
+                    "name": "Sub-task"
+                },
+                "summary": "'"${{ steps.pr-details.outputs.title }} - Review by ${reviewer} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
+                "assignee": {
+                  "name": "'"${jira_id}"'"
+                }
+              }
+            }' > /dev/null
             COLLABORATORS+=("{\"name\": \"${reviewer}\", \"id\": \"${jira_id}\"}")
           done < <(jq -r '.[] | .login' <<<"${REVIEWERS}")
