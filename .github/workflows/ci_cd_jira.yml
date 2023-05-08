@@ -56,6 +56,7 @@ jobs:
           while IFS= read -r reviewer; do
             # Lookup the Jira account ID for the GitHub username
             jira_id=$(jq -r --arg reviewer "${reviewer}" '.[$reviewer]' <<<"${MAP}")
+            echo "Reviewer: ${reviewer}, Jira ID: ${jira_id}"
             if [[ -z "${jira_id}" ]]; then
               echo "ERROR: Missing mapping for GitHub user: ${reviewer}" >&2
               exit 1
