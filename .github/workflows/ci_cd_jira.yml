@@ -55,6 +55,7 @@ jobs:
           
           # Create subtask for each reviewer
           for reviewer in $(echo ${{ steps.pr-details.outputs.reviewers }} | tr ',' '\n'); do
-            value=$(echo "${COLLABORATORS[$reviewer]}" | cut -d':' -f2)
-            echo "Creating subtask for ${reviewer} (${value})"
+            COLLABORATOR=${COLLABORATORS[$reviewer]}
+            JIRA_ACCOUNT_ID=${COLLABORATOR#*:} # Удалить все символы до первого двоеточия
+            echo "Creating subtask for ${reviewer} (${JIRA_ACCOUNT_ID})"
           done
