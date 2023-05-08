@@ -26,7 +26,6 @@ jobs:
           REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
           MAPPING_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
         run: |
-          echo "JIRA_URL=${JIRA_URL}"
           # Create parent Jira issue
           curl -s -X POST \
           --url "${JIRA_URL}/rest/api/2/issue/" \
@@ -34,19 +33,19 @@ jobs:
           --header "Accept: application/json" \
           --user "${JIRA_AUTH}" \
           -d '{
-              "fields": {
-                  "project": {
-                      "key": "'"${PROJECT_KEY}"'"
-                  },
-                  "issuetype": {
-                      "name": "'"${ISSUE_TYPE}"'"
-                  },
-                  "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
-                  "description": "'"${DESCRIPTION}"'",
-                  "assignee": {
-                    "accountId": "'"${{ env[steps.pr-details.outputs.assignee] }}"'"
-                  }
+            "fields": {
+              "project": {
+                  "key": "'"${PROJECT_KEY}"'"
+              },
+              "issuetype": {
+                  "name": "'"${ISSUE_TYPE}"'"
+              },
+              "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
+              "description": "'"${DESCRIPTION}"'",
+              "assignee": {
+                "accountId": "'"${{ env[steps.pr-details.outputs.assignee] }}"'"
               }
+            }
           }' > jira-issue.json
           
           # Parse issue key from Jira response
