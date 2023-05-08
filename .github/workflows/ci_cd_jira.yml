@@ -28,7 +28,7 @@ jobs:
         run: |
           MAP=$(echo "${COLLABORATORS_JSON}" | jq -r '.mapping')
           echo "MAP: ${MAP}"
-          $key=${ASSIGNEE}
+          key=${ASSIGNEE}
           echo "ASSIGNEE: ${ASSIGNEE}"
           assignee_id=$(jq -r --arg key "${ASSIGNEE}" '.[$key]' <<<"${MAP}")
           echo "ASSIGNEE ID: ${assignee_id}"
