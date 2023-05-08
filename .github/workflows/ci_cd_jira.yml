@@ -57,28 +57,4 @@ jobs:
           for reviewer in $(echo ${{ steps.pr-details.outputs.reviewers }} | tr ',' '\n'); do
             value=$(echo "${COLLABORATORS[$reviewer]}" | cut -d':' -f2)
             echo "Creating subtask for ${reviewer} (${value})"
-#               IFS=":" read -r githubaccount jiraaccount value <<< "${COLLABORATORS[$reviewer]}"
-#                       echo "Key: $key, Value: $value"
-#            curl -s -X POST \
-#            --url "${JIRA_URL}/rest/api/2/issue/" \
-#            --header "Content-Type: application/json" \
-#            --header "Accept: application/json" \
-#            --user "${JIRA_AUTH}" \
-#            -d '{
-#                "fields": {
-#                    "project": {
-#                        "key": "'"${PROJECT_KEY}"'"
-#                    },
-#                    "parent": {
-#                        "key": "'"${ISSUE_KEY}"'"
-#                    },
-#                    "issuetype": {
-#                        "name": "Sub-task"
-#                    },
-#                    "summary": "'"${{ steps.pr-details.outputs.title }} - Review by ${reviewer} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
-#                    "assignee": {
-#                      "name": "'"${{ env[${reviewer}] }}"'"
-#                    }
-#                }
-#            }' > /dev/null
           done
