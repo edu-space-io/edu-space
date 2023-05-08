@@ -24,8 +24,11 @@ jobs:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
           ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
           REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
-          MAPPING_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
+          COLLABORATORS_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
         run: |
+          MAP=$(echo "${COLLABORATORS_JSON}" | jq -r '.mapping')
+          assignee_id=$(jq -r --arg assignee "${steps.pr-details.outputs.assignee}" '.[steps.pr-details.outputs.assignee]' <<<"${MAP}")
+          
           curl -s -X POST \
           --url "${JIRA_URL}/rest/api/2/issue/" \
           --header "Content-Type: application/json" \
@@ -42,7 +45,7 @@ jobs:
               "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
               "description": "'"${DESCRIPTION}"'",
               "assignee": {
-                "accountId": "'"${{ env[steps.pr-details.outputs.assignee] }}"'"
+                "accountId": "'"${assignee_id}"'"
               }
             }
           }' > jira-issue.json
