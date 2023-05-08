@@ -55,6 +55,6 @@ jobs:
           
           # Create subtask for each reviewer
           readarray -t COLLABORATORS_ARRAY <<< "$COLLABORATORS"
-          for value in ${COLLABORATORS_ARRAY[$reviewer]}; do
+          for value in ${COLLABORATORS_ARRAY[@]}; do
             echo $value
           done
