@@ -25,8 +25,8 @@ jobs:
         env:
           COLLABORATORS_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
         run: |
-          mapped_collaborators=$(echo "${{ env.COLLABORATORS_JSON }}" | jq -r '.mapping')
-          echo "mapped-collaborators: ${mapped_collaborators}" >> $GITHUB_OUTPUT
+          mappedcollaborators=$(echo "${{ env.COLLABORATORS_JSON }}" | jq -r '.mapping')
+          echo "mapped-collaborators: ${mappedcollaborators}" >> $GITHUB_OUTPUT
       - name: Create Jira issue for assignee
         id: create-assigned-issue
         env:
