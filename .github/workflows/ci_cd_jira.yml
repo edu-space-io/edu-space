@@ -24,7 +24,7 @@ jobs:
         id: get-collaborators
         env:
           COLLABORATORS_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
-        run: echo "mapped-collaborators=$(echo '${{ env.COLLABORATORS_JSON }}' | jq -c '.')" >> $GITHUB_OUTPUT
+        run: echo "mapped-collaborators=$(echo '${{ env.COLLABORATORS_JSON }}' | jq -r '.')" >> $GITHUB_OUTPUT
       - name: Create Jira issue for assignee
         id: create-assigned-issue
         env:
@@ -34,7 +34,7 @@ jobs:
         run: |
           key=${{ env.ASSIGNEE }}
           echo "ASSIGNEE: ${ASSIGNEE}"
-          assignee_id=$(jq --arg key "${{ env.ASSIGNEE }}" '.[$key]' <<<"${{ env.COLLABORATORS }}")
+          assignee_id=$(jq -r --arg key "${{ env.ASSIGNEE }}" '.[$key]' <<<"${{ env.COLLABORATORS }}")
           echo "ASSIGNEE ID: ${assignee_id}"
           curl -s -X POST \
           --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
