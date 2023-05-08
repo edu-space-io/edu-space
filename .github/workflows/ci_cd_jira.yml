@@ -52,9 +52,11 @@ jobs:
           
           # Parse issue key from Jira response
           ISSUE_KEY=$(cat jira-issue.json | jq -r '.key')
-          
-          # Create subtask for each reviewer
-          readarray -t COLLABORATORS_ARRAY <<< "$COLLABORATORS"
-          for value in ${COLLABORATORS_ARRAY[@]}; do
-            echo $value
-          done
+               
+          readarray -t REVIEWERS <<< "${{ steps.pr-details.outputs.reviewers }}"
+          for reviewer in "${REVIEWERS[@]}"; do
+            # Get JIRA account ID for this reviewer
+            readarray -d ":" -t PARTS <<< "${COLLABORATORS[$reviewer]}"
+            JIRA_ACCOUNT_ID="${PARTS[1]}"
+            echo "JIRA_ACCOUNT_ID=${JIRA_ACCOUNT_ID}"
+          done     
