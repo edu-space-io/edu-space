@@ -54,7 +54,7 @@ jobs:
           ISSUE_KEY=$(cat jira-issue.json | jq -r '.key')
           
           # Create subtask for each reviewer
-          for reviewer in $(echo ${{ steps.pr-details.outputs.reviewers }} | tr ',' '\n'); do
-            readarray -t COLLABORATORS_ARRAY <<< "$COLLABORATORS"
-            echo "${COLLABORATORS_ARRAY[$reviewer]}"
+          readarray -t COLLABORATORS_ARRAY <<< "$COLLABORATORS"
+          for value in ${COLLABORATORS_ARRAY[$reviewer]}; do
+            echo $value
           done
