@@ -2,6 +2,12 @@ name: Create Jira issue on PR open
 on:
   pull_request:
     types: [ opened ]
+env:
+  JIRA_URL: ${{ secrets.JIRA_URL }}
+  PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+  ISSUE_TYPE: ${{ secrets.JIRA_ISSUE_TYPE }}
+  JIRA_AUTH: ${{ secrets.JIRA_AUTH }}
+  COLLABORATORS_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
 jobs:
   create_jira_issue:
     runs-on: ubuntu-latest
@@ -15,16 +21,11 @@ jobs:
           echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
           echo "number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
-      - name: Create Jira issue
+      - name: Create Jira issue for assignee
+        id: create-assigned-issue
         env:
-          JIRA_URL: ${{ secrets.JIRA_URL }}
-          PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
-          ISSUE_TYPE: ${{ secrets.JIRA_ISSUE_TYPE }}
-          JIRA_AUTH: ${{ secrets.JIRA_AUTH }}
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
           ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
-          REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
-          COLLABORATORS_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
         run: |
           MAPPED_COLLABORATORS=$(echo "${COLLABORATORS_JSON}" | jq -r '.mapping')
           echo "MAPPED_COLLABORATORS: ${MAPPED_COLLABORATORS}"
@@ -52,16 +53,21 @@ jobs:
               }
             }
           }' > jira-issue.json
-          
           cat jira-issue.json
           # Parse issue key from Jira response
-          ISSUE_KEY=$(cat jira-issue.json | jq -r '.key')
-          echo "Jira issue created: ${ISSUE_KEY}"
-          
-          # Create subtask for each reviewer
-          for reviewer in $(echo ${{ steps.pr-details.outputs.reviewers }} | tr ',' '\n'); do
+          echo "assignee-issue-key=$(cat jira-issue.json | jq -r '.key')" >> $GITHUB_OUTPUT
+
+      - name: Create Jira issues for reviewers
+        env:
+          DESCRIPTION: ${{ steps.pr-details.outputs.description }}
+          ASSIGNEE_ISSUE_KEY: ${{ steps.pr-details.outputs.assignee-issue-key }}
+          REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
+        run: |
+          ASSIGNEE_ISSUE_KEY=$(cat jira-issue.json | jq -r '.key')
+          for reviewer in $(echo ${REVIEWERS} | tr ',' '\n'); do
             key=${reviewer}
             reviewer_id=$(jq -r --arg key "${reviewer}" '.[$key]' <<<"${MAPPED_COLLABORATORS}")
+            echo "Reviewer: ${reviewer_id}"
             curl -s -X POST \
             --url "${JIRA_URL}/rest/api/2/issue/" \
             --header "Content-Type: application/json" \
@@ -73,16 +79,18 @@ jobs:
                     "key": "'"${PROJECT_KEY}"'"
                   },
                   "parent": {
-                    "key": "'"${ISSUE_KEY}"'"
+                    "key": "'"${ASSIGNEE_ISSUE_KEY}"'"
                   },
                   "issuetype": {
                     "name": "Sub-task"
                   },
                   "summary": "'"${{ steps.pr-details.outputs.title }} - Review by ${reviewer} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
                   "assignee": {
-                    "name": "'"${reviewer_id}"'"
+                    "accountId": "'"${reviewer_id}"'"
                   }
               }
             }
-          }' > /dev/null
+          }' > jira-subtask.json
+          SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
+          echo "Jira subtask created: ${SUBTASK_KEY}"
           done
