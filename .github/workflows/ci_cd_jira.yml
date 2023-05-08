@@ -51,4 +51,4 @@ jobs:
                 "accountId": "'"${assignee_id}"'"
               }
             }
-          }' > jira-issue.json
+          }' > /dev/null
