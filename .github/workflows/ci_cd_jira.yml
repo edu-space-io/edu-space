@@ -59,33 +59,5 @@ jobs:
           
           COLLABORATORS=()
           while IFS= read -r reviewer; do
-            # Lookup the Jira account ID for the GitHub username
-            jira_id=$(jq -r --arg key "${reviewer}" '.[$reviewer]' <<<"${MAP}")
-            if [[ -z "${jira_id}" ]]; then
-              echo "ERROR: Missing mapping for GitHub user: ${reviewer}" >&2
-              exit 1
-            fi
-            COLLABORATORS+=("{\"name\": \"${reviewer}\", \"id\": \"${jira_id}\"}")
-            curl -s -X POST \
-            --url "${JIRA_URL}/rest/api/2/issue/" \
-            --header "Content-Type: application/json" \
-            --header "Accept: application/json" \
-            --user "${JIRA_AUTH}" \
-            -d '{
-              "fields": {
-                "project": {
-                    "key": "'"${PROJECT_KEY}"'"
-                },
-                "parent": {
-                    "key": "'"${ISSUE_KEY}"'"
-                },
-                "issuetype": {
-                    "name": "Sub-task"
-                },
-                "summary": "'"${{ steps.pr-details.outputs.title }} - Review by ${reviewer} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
-                "assignee": {
-                  "id": "'"${jira_id}"'"
-                }
-              }
-            }' > /dev/null
+            echo "Reviewer: ${reviewer}"
           done < <(jq -r '.[] | .login' <<<"${REVIEWERS}")
