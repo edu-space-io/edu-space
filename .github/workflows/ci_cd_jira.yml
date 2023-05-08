@@ -25,6 +25,7 @@ jobs:
           ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
           MAPPING_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
         run: |
+          echo "JIRA_URL=${JIRA_URL}"
           # Create parent Jira issue
           curl -s -X POST \
           --url "${JIRA_URL}/rest/api/2/issue/" \
