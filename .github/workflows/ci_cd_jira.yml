@@ -53,13 +53,13 @@ jobs:
           MAP=$(echo "${MAPPING_JSON}" | jq -r '.mapping')
           COLLABORATORS=()
           while IFS= read -r reviewer; do
-          # Lookup the Jira account ID for the GitHub username
-          jira_id=$(jq -r --arg reviewer "${reviewer}" '.[$reviewer]' <<<"${MAP}")
-          if [[ -z "${jira_id}" ]]; then
-            echo "ERROR: Missing mapping for GitHub user: ${reviewer}" >&2
-            exit 1
-          fi
-          COLLABORATORS+=("{\"name\": \"${reviewer}\", \"id\": \"${jira_id}\"}")
+            # Lookup the Jira account ID for the GitHub username
+            jira_id=$(jq -r --arg reviewer "${reviewer}" '.[$reviewer]' <<<"${MAP}")
+            if [[ -z "${jira_id}" ]]; then
+              echo "ERROR: Missing mapping for GitHub user: ${reviewer}" >&2
+              exit 1
+            fi
+            COLLABORATORS+=("{\"name\": \"${reviewer}\", \"id\": \"${jira_id}\"}")
           done < <(jq -r '.[] | .login' <<<"${REVIEWERS}")
           echo "${COLLABORATORS}"
 
