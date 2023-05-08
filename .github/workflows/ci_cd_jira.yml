@@ -60,7 +60,8 @@ jobs:
           
           # Create subtask for each reviewer
           for reviewer in $(echo ${{ steps.pr-details.outputs.reviewers }} | tr ',' '\n'); do
-            reviewer_id=$(jq -r --arg key "${reviewer}" '.[$reviewer]' <<<"${MAPPED_COLLABORATORS}")
+            key=${reviewer}
+            reviewer_id=$(jq -r --arg key "${reviewer}" '.[$key]' <<<"${MAPPED_COLLABORATORS}")
             curl -s -X POST \
             --url "${JIRA_URL}/rest/api/2/issue/" \
             --header "Content-Type: application/json" \
