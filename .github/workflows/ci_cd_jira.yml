@@ -51,6 +51,7 @@ jobs:
           ISSUE_KEY=$(cat jira-issue.json | jq -r '.key')
                
           MAP=$(echo "${MAPPING_JSON}" | jq -r '.mapping')
+          echo "${MAP}"
           COLLABORATORS=()
           while IFS= read -r reviewer; do
             # Lookup the Jira account ID for the GitHub username
