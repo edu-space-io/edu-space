@@ -7,7 +7,6 @@ env:
   PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
   ISSUE_TYPE: ${{ secrets.JIRA_ISSUE_TYPE }}
   JIRA_AUTH: ${{ secrets.JIRA_AUTH }}
-  COLLABORATORS_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
 jobs:
   create_jira_issue:
     runs-on: ubuntu-latest
@@ -21,17 +20,23 @@ jobs:
           echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
           echo "number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
+      - name: Get collaborators
+        id: get-collaborators
+        env:
+          COLLABORATORS_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
+        run: |
+          MAPPED_COLLABORATORS=$(echo "${COLLABORATORS_JSON}" | jq -r '.mapping')
+          echo "mapped-collaborators: ${MAPPED_COLLABORATORS}"
       - name: Create Jira issue for assignee
         id: create-assigned-issue
         env:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
           ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
+          COLLABORATORS: ${{ steps.get-collaborators.outputs.mapped-collaborators }}
         run: |
-          MAPPED_COLLABORATORS=$(echo "${COLLABORATORS_JSON}" | jq -r '.mapping')
-          echo "MAPPED_COLLABORATORS: ${MAPPED_COLLABORATORS}"
           key=${ASSIGNEE}
           echo "ASSIGNEE: ${ASSIGNEE}"
-          assignee_id=$(jq -r --arg key "${ASSIGNEE}" '.[$key]' <<<"${MAPPED_COLLABORATORS}")
+          assignee_id=$(jq -r --arg key "${ASSIGNEE}" '.[$key]' <<<"${COLLABORATORS}")
           echo "ASSIGNEE ID: ${assignee_id}"
           curl -s -X POST \
           --url "${JIRA_URL}/rest/api/2/issue/" \
@@ -62,11 +67,12 @@ jobs:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
           ASSIGNEE_ISSUE_KEY: ${{ steps.pr-details.outputs.assignee-issue-key }}
           REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
+          COLLABORATORS: ${{ steps.get-collaborators.outputs.mapped-collaborators }}
         run: |
           ASSIGNEE_ISSUE_KEY=$(cat jira-issue.json | jq -r '.key')
           for reviewer in $(echo ${REVIEWERS} | tr ',' '\n'); do
             key=${reviewer}
-            reviewer_id=$(jq -r --arg key "${reviewer}" '.[$key]' <<<"${MAPPED_COLLABORATORS}")
+            reviewer_id=$(jq -r --arg key "${reviewer}" '.[$key]' <<<"${COLLABORATORS}")
             echo "Reviewer: ${reviewer_id}"
             curl -s -X POST \
             --url "${JIRA_URL}/rest/api/2/issue/" \
