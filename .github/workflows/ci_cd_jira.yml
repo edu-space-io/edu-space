@@ -61,3 +61,5 @@ jobs:
           fi
           COLLABORATORS+=("{\"name\": \"${reviewer}\", \"id\": \"${jira_id}\"}")
           done < <(jq -r '.[] | .login' <<<"${REVIEWERS}")
+          echo "${COLLABORATORS}"
+
