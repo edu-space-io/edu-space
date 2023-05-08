@@ -28,8 +28,7 @@ jobs:
         run: |
           MAP=$(echo "${COLLABORATORS_JSON}" | jq -r '.mapping')
           echo "MAP: ${MAP}"
-          echo "ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}"
-          assignee_id=$(jq -r --arg assignee "${steps.pr-details.outputs.assignee}" '.[env.assignee]' <<<"${MAP}")
+          assignee_id=$(jq -r --arg assignee "${steps.pr-details.outputs.assignee}" '.[$ASSIGNEE]' <<<"${MAP}")
           echo "ASSIGNEE ID: ${assignee_id}"
           curl -s -X POST \
           --url "${JIRA_URL}/rest/api/2/issue/" \
