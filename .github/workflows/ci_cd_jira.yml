@@ -23,10 +23,7 @@ jobs:
           JIRA_AUTH: ${{ secrets.JIRA_AUTH }}
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
           ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
-          COLLABORATORS: |
-            alchibekov: "5c2f993ed254b55db84cb3e1"
-            atmlinderman: "712020:2ebe3066-df60-45f0-9653-0545cc9ebacc"
-            eduspace312: "712020:21e3a790-9137-4db1-8aba-5b92f5461de4"
+          MAPPING_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
         run: |
           # Create parent Jira issue
           curl -s -X POST \
@@ -53,10 +50,14 @@ jobs:
           # Parse issue key from Jira response
           ISSUE_KEY=$(cat jira-issue.json | jq -r '.key')
                
-          readarray -t REVIEWERS <<< "${{ steps.pr-details.outputs.reviewers }}"
-          for reviewer in "${REVIEWERS[@]}"; do
-            # Get JIRA account ID for this reviewer
-            readarray -d ":" -t PARTS <<< "${COLLABORATORS[$reviewer]}"
-            JIRA_ACCOUNT_ID="${PARTS[1]}"
-            echo "JIRA_ACCOUNT_ID=${JIRA_ACCOUNT_ID}"
-          done     
+          MAP=$(echo "${MAPPING_JSON}" | jq -r '.mapping')
+          REVIEWERS=()
+          while IFS= read -r reviewer; do
+          # Lookup the Jira account ID for the GitHub username
+          jira_id=$(jq -r --arg reviewer "${reviewer}" '.[$reviewer]' <<<"${MAP}")
+          if [[ -z "${jira_id}" ]]; then
+            echo "ERROR: Missing mapping for GitHub user: ${reviewer}" >&2
+            exit 1
+          fi
+          REVIEWERS+=("{\"name\": \"${reviewer}\", \"id\": \"${jira_id}\"}")
+          done < <(jq -r '.[] | .login' <<<"${REVIEWERS}")
