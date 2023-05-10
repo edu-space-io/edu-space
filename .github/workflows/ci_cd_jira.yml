@@ -32,7 +32,7 @@ jobs:
         run: |
           key=${{ env.ASSIGNEE }}
           echo "ASSIGNEE: ${ASSIGNEE}"
-          assignee_id=$(jq -r --arg key "${{ env.ASSIGNEE }}" '.[$key]' <<< "${{ env.COLLABORATORS }}")
+          assignee_id=$(echo "${{ env.COLLABORATORS }}" | awk -F':' -v key="${{ env.ASSIGNEE }}" '$1==key {print $2}')
           echo "ASSIGNEE ID: ${assignee_id}"
           curl -s -X POST \
           --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
