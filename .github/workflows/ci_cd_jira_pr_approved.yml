@@ -19,7 +19,9 @@ jobs:
         if: steps.check-review.outputs.reviewer != ''
         run: |
           reviewer=${{ steps.check-review.outputs.reviewer }}
-          reviewer_id=$(jq -r --arg key "$reviewer" '.[$key]' <<<"${{ secrets.JIRA_GITHUB_MAPPING }}")
+          key=${reviewer}
+          reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
+          
           subtask_key=$(curl -s --request GET \
             --url "${{ env.JIRA_URL }}/rest/api/2/search?jql=project=${{ env.PROJECT_KEY }} AND parent=${{ steps.pr-details.outputs.assignee-issue-key }} AND assignee=${reviewer_id}" \
             --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
