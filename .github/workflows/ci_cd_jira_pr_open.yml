@@ -1,0 +1,95 @@
+name: Create Jira issue on PR open
+on:
+  pull_request:
+    types: [ opened ]
+env:
+  JIRA_URL: ${{ secrets.JIRA_URL }}
+  PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+  ISSUE_TYPE: ${{ secrets.JIRA_ISSUE_TYPE }}
+  JIRA_AUTH: ${{ secrets.JIRA_AUTH }}
+jobs:
+  create_jira_issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get PR details
+        id: pr-details
+        run: |
+          echo "branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+          echo "title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+          echo "description=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
+          echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
+          echo "number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
+      - name: Create Jira issue for assignee
+        id: create-assigned-issue
+        env:
+          DESCRIPTION: ${{ steps.pr-details.outputs.description }}
+          ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
+          PR_NUMBER: ${{ steps.pr-details.outputs.number }}
+          PR_TITLE: ${{ steps.pr-details.outputs.title }}
+        run: |
+          key=${{ env.ASSIGNEE }}
+          echo "ASSIGNEE: ${ASSIGNEE}"
+          assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ env.ASSIGNEE }}" '.[$key]')
+          echo "ASSIGNEE ID: ${assignee_id}"
+          curl -s -X POST \
+          --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
+          --header "Content-Type: application/json" \
+          --header "Accept: application/json" \
+          --user "${{ env.JIRA_AUTH }}" \
+          -d '{
+            "fields": {
+              "project": {
+                  "key": "'"${{ env.PROJECT_KEY }}"'"
+              },
+              "issuetype": {
+                  "name": "'"${{ env.ISSUE_TYPE }}"'"
+              },
+              "summary": "'"${PR_TITLE} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER}"'",
+              "description": "'"${{ env.DESCRIPTION }}"'",
+              "assignee": {
+                "accountId": "'"${assignee_id}"'"
+              }
+            }
+          }' > jira-issue.json
+          # Parse issue key from Jira response
+          cat jira-issue.json
+          assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
+          echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
+      - name: Create Jira issues for reviewers
+        env:
+          DESCRIPTION: ${{ steps.pr-details.outputs.description }}
+          REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
+          ASSIGNEE_ISSUE_KEY: ${{ steps.create-assigned-issue.outputs.assignee-issue-key }}
+          PR_NUMBER: ${{ steps.pr-details.outputs.number }}
+          PR_TITLE: ${{ steps.pr-details.outputs.title }}
+        run: |
+          for reviewer in $(echo ${{ env.REVIEWERS }} | tr ',' '\n'); do
+            key=${reviewer}
+            reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
+            echo "Reviewer: ${reviewer_id}"
+            curl -s -X POST \
+            --url "${JIRA_URL}/rest/api/2/issue/" \
+            --header "Content-Type: application/json" \
+            --header "Accept: application/json" \
+            --user "${JIRA_AUTH}" \
+            -d '{
+              "fields": {
+                "project": {
+                  "key": "'"${{ env.PROJECT_KEY }}"'"
+                },
+                "parent": {
+                  "key": "'"${{ env.ASSIGNEE_ISSUE_KEY }}"'"
+                },
+                "issuetype": {
+                  "name": "Sub-task"
+                },
+                "summary": "'"${PR_TITLE} - Review by ${reviewer} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER}"'",
+                "assignee": {
+                  "accountId": "'"${reviewer_id}"'"
+                }
+              }
+            }' > jira-subtask.json
+            cat jira-subtask.json
+            SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
+          done
