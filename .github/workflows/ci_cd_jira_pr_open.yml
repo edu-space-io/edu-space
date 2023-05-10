@@ -25,6 +25,8 @@ jobs:
         env:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
           ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
+          PR_NUMBER: ${{ steps.pr-details.outputs.number }}
+          PR_TITLE: ${{ steps.pr-details.outputs.title }}
         run: |
           key=${{ env.ASSIGNEE }}
           echo "ASSIGNEE: ${ASSIGNEE}"
@@ -43,7 +45,7 @@ jobs:
               "issuetype": {
                   "name": "'"${{ env.ISSUE_TYPE }}"'"
               },
-              "summary": "'"${{ steps.pr-details.outputs.title }} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
+              "summary": "'"${PR_TITLE} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER}"'",
               "description": "'"${{ env.DESCRIPTION }}"'",
               "assignee": {
                 "accountId": "'"${assignee_id}"'"
@@ -59,6 +61,8 @@ jobs:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
           REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
           ASSIGNEE_ISSUE_KEY: ${{ steps.create-assigned-issue.outputs.assignee-issue-key }}
+          PR_NUMBER: ${{ steps.pr-details.outputs.number }}
+          PR_TITLE: ${{ steps.pr-details.outputs.title }}
         run: |
           for reviewer in $(echo ${{ env.REVIEWERS }} | tr ',' '\n'); do
             key=${reviewer}
@@ -80,7 +84,7 @@ jobs:
                 "issuetype": {
                   "name": "Sub-task"
                 },
-                "summary": "'"${{ steps.pr-details.outputs.title }} - Review by ${reviewer} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${{ steps.pr-details.outputs.number }}"'",
+                "summary": "'"${PR_TITLE} - Review by ${reviewer} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER}"'",
                 "assignee": {
                   "accountId": "'"${reviewer_id}"'"
                 }
