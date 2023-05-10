@@ -22,7 +22,7 @@ jobs:
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
       - name: Get collaborators
         id: get-collaborators
-        run: echo "mapped-collaborators=${{ secrets.JIRA_GITHUB_MAPPING }}">> $GITHUB_OUTPUT
+        run: echo "mapped-collaborators=$(echo "${{ secrets.JIRA_GITHUB_MAPPING }}" | jq -r 'to_entries[] | "\(.key):\(.value)"')" >> $GITHUB_ENV
       - name: Create Jira issue for assignee
         id: create-assigned-issue
         env:
