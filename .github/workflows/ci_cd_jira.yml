@@ -86,6 +86,6 @@ jobs:
                 }
               }
             }' > jira-subtask.json
-          SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
-          echo "Jira subtask created: ${SUBTASK_KEY}"
+            SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
+            echo "Jira subtask created: ${SUBTASK_KEY}"
           done
