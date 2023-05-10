@@ -22,9 +22,12 @@ jobs:
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
       - name: Get collaborators
         id: get-collaborators
-        env:
-          COLLABORATORS_JSON: ${{ secrets.JIRA_GITHUB_MAPPING }}
-        run: echo "mapped-collaborators=$(echo '${{ env.COLLABORATORS_JSON }}' | jq -r '.')" >> $GITHUB_OUTPUT
+        run: |
+          # Retrieve the secret value and save it to a file
+          echo "${{ secrets.JIRA_GITHUB_MAPPING }}" > jira-github-mapping.json
+
+          # Set the file contents as an output variable
+          echo "mapped-collaborators=$(cat jira-github-mapping.json)>> $GITHUB_OUTPUT
       - name: Create Jira issue for assignee
         id: create-assigned-issue
         env:
@@ -34,7 +37,7 @@ jobs:
         run: |
           key=${{ env.ASSIGNEE }}
           echo "ASSIGNEE: ${ASSIGNEE}"
-          assignee_id=$(echo env.COLLABORATORS | jq -R --arg key "${{ env.ASSIGNEE }}" '.[$key]')
+          assignee_id=$(echo env.COLLABORATORS | jq --arg key "${{ env.ASSIGNEE }}" '.[$key]')
           echo "ASSIGNEE ID: ${assignee_id}"
           curl -s -X POST \
           --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
