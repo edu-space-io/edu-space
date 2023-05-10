@@ -20,25 +20,15 @@ jobs:
           echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
           echo "number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
-      - name: Get collaborators
-        id: get-collaborators
-        run: |
-          collaborator_ids=""
-          collaborators=$(echo "${{ secrets.JIRA_GITHUB_MAPPING }}" | jq -r 'to_entries[] | "\(.key): \"\(.value)\""')
-          while IFS=':' read -r githubUsername jiraAccountId; do
-            collaborator_ids+="${githubUsername}:${jiraAccountId},"
-          done <<< "$collaborators"
-          echo "mapped-collaborators=${collaborator_ids%?}" >> $GITHUB_ENV
       - name: Create Jira issue for assignee
         id: create-assigned-issue
         env:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
           ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
-          COLLABORATORS: ${{ steps.get-collaborators.outputs.mapped-collaborators }}
         run: |
           key=${{ env.ASSIGNEE }}
           echo "ASSIGNEE: ${ASSIGNEE}"
-          assignee_id=$(echo "${{ env.COLLABORATORS }}" | jq -r --arg key "${{ env.ASSIGNEE }}: " 'to_entries[] | select(.key == $key) | .value')
+          reviewer_id=$(jq -r --arg key "${{ env.ASSIGNEE }}" '.[$key]' <<<"${{ secrets.JIRA_GITHUB_MAPPING }}")
           echo "ASSIGNEE ID: ${assignee_id}"
           curl -s -X POST \
           --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
@@ -70,11 +60,10 @@ jobs:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
           ASSIGNEE_ISSUE_KEY: ${{ steps.pr-details.outputs.assignee-issue-key }}
           REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
-          COLLABORATORS: ${{ steps.get-collaborators.outputs.mapped-collaborators }}
         run: |
           for reviewer in $(echo ${{ env.REVIEWERS }} | tr ',' '\n'); do
             key=${reviewer}
-            reviewer_id=$(jq -r --arg key "${reviewer}" '.[$key]' <<<"${{ env.COLLABORATORS }}")
+            reviewer_id=$(jq -r --arg key "${reviewer}" '.[$key]' <<<"${{ secrets.JIRA_GITHUB_MAPPING }}")
             echo "Reviewer: ${reviewer_id}"
             curl -s -X POST \
             --url "${JIRA_URL}/rest/api/2/issue/" \
