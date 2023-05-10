@@ -28,7 +28,7 @@ jobs:
         run: |
           key=${{ env.ASSIGNEE }}
           echo "ASSIGNEE: ${ASSIGNEE}"
-          reviewer_id=$(jq -r --arg key "${{ env.ASSIGNEE }}" '.[$key]' <<<"${{ secrets.JIRA_GITHUB_MAPPING }}")
+          assignee_id=$(jq -r --arg key "${{ env.ASSIGNEE }}" '.[$key]' <<<"${{ secrets.JIRA_GITHUB_MAPPING }}")
           echo "ASSIGNEE ID: ${assignee_id}"
           curl -s -X POST \
           --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
