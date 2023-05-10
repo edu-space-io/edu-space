@@ -51,8 +51,8 @@ jobs:
             }
           }' > jira-issue.json
           # Parse issue key from Jira response
+          cat jira-issue.json
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
-          echo "assignee-issue-key=${assignee_issue_key}"
           echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
       - name: Create Jira issues for reviewers
         env:
@@ -88,5 +88,4 @@ jobs:
             }' > jira-subtask.json
             cat jira-subtask.json
             SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
-            echo "Jira subtask created: ${SUBTASK_KEY}"
           done
