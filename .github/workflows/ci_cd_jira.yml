@@ -22,7 +22,13 @@ jobs:
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
       - name: Get collaborators
         id: get-collaborators
-        run: echo "mapped-collaborators=$(echo "${{ secrets.JIRA_GITHUB_MAPPING }}" | jq -r 'to_entries[] | "\(.key):\(.value)"')" >> $GITHUB_ENV
+        run: |
+          collaborator_ids=""
+          collaborators=$(echo "${{ secrets.JIRA_GITHUB_MAPPING }}" | jq -r 'to_entries[] | "\(.key):\(.value)"')
+          while IFS=':' read -r githubUsername jiraAccountId; do
+            collaborator_ids+="${githubUsername}:${jiraAccountId},"
+            done <<< "$collaborators"
+          echo "mapped-collaborators=${collaborator_ids%?}" >> $GITHUB_ENV
       - name: Create Jira issue for assignee
         id: create-assigned-issue
         env:
@@ -32,7 +38,7 @@ jobs:
         run: |
           key=${{ env.ASSIGNEE }}
           echo "ASSIGNEE: ${ASSIGNEE}"
-          assignee_id=$(echo "${{ env.COLLABORATORS }}" | awk -F':' -v key="${{ env.ASSIGNEE }}" '$0==key {print $2}')
+          assignee_id=$(echo "${{ env.COLLABORATORS }}" | jq -r --arg key "${{ env.ASSIGNEE }}: " 'to_entries[] | select(.key == $key) | .value')
           echo "ASSIGNEE ID: ${assignee_id}"
           curl -s -X POST \
           --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
