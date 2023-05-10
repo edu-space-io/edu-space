@@ -52,6 +52,7 @@ jobs:
           }' > jira-issue.json
           # Parse issue key from Jira response
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
+          echo "assignee-issue-key=${assignee_issue_key}"
           echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
 
       - name: Create Jira issues for reviewers
