@@ -13,7 +13,7 @@ jobs:
         id: check-review
         run: |
           if [[ "${{ github.event.review.state }}" == "approved" ]]; then
-            echo "::set-output name=reviewer::${{ github.event.review.user.login }}"
+            echo "reviewer=${{ github.event.review.user.login }}" >> $GITHUB_OUTPUT
           fi
       - name: Update subtasks
         if: steps.check-review.outputs.reviewer != ''
@@ -39,5 +39,6 @@ jobs:
                     "name": "Done"
                   }
                 }
-              }' > /dev/null
+              }' > update-subtask.json
           done
+          cat update-subtask.json
