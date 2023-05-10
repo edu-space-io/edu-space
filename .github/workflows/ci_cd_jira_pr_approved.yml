@@ -1,0 +1,41 @@
+name: Complete Jira issue on PR Approved
+on:
+  pull_request_review:
+    types:
+      - submitted
+env:
+  PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+jobs:
+  update_subtasks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if review is approved
+        id: check-review
+        run: |
+          if [[ "${{ github.event.review.state }}" == "approved" ]]; then
+            echo "::set-output name=reviewer::${{ github.event.review.user.login }}"
+          fi
+      - name: Update subtasks
+        if: steps.check-review.outputs.reviewer != ''
+        run: |
+          reviewer=${{ steps.check-review.outputs.reviewer }}
+          reviewer_id=$(jq -r --arg key "$reviewer" '.[$key]' <<<"${{ secrets.JIRA_GITHUB_MAPPING }}")
+          subtask_key=$(curl -s --request GET \
+            --url "${{ env.JIRA_URL }}/rest/api/2/search?jql=project=${{ env.PROJECT_KEY }} AND parent=${{ steps.pr-details.outputs.assignee-issue-key }} AND assignee=${reviewer_id}" \
+            --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
+            --header "Content-Type: application/json" \
+            | jq -r '.issues[].key')
+          
+          for key in $subtask_key; do
+            curl -s --request PUT \
+              --url "${{ env.JIRA_URL }}/rest/api/2/issue/${key}" \
+              --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
+              --header "Content-Type: application/json" \
+              --data '{
+                "fields": {
+                  "resolution": {
+                    "name": "Done"
+                  }
+                }
+              }'
+          done
