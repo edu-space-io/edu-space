@@ -57,8 +57,8 @@ jobs:
       - name: Create Jira issues for reviewers
         env:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
-          ASSIGNEE_ISSUE_KEY: ${{ steps.pr-details.outputs.assignee-issue-key }}
           REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
+          ASSIGNEE_ISSUE_KEY: ${{ steps.create-assigned-issue.outputs.assignee-issue-key }}
         run: |
           for reviewer in $(echo ${{ env.REVIEWERS }} | tr ',' '\n'); do
             key=${reviewer}
