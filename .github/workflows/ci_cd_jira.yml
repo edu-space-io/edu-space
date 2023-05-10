@@ -24,10 +24,10 @@ jobs:
         id: get-collaborators
         run: |
           collaborator_ids=""
-          collaborators=$(echo "${{ secrets.JIRA_GITHUB_MAPPING }}" | jq -r 'to_entries[] | "\(.key):\(.value)"')
+          collaborators=$(echo "${{ secrets.JIRA_GITHUB_MAPPING }}" | jq -r 'to_entries[] | "\(.key): \"\(.value)\""')
           while IFS=':' read -r githubUsername jiraAccountId; do
             collaborator_ids+="${githubUsername}:${jiraAccountId},"
-            done <<< "$collaborators"
+          done <<< "$collaborators"
           echo "mapped-collaborators=${collaborator_ids%?}" >> $GITHUB_ENV
       - name: Create Jira issue for assignee
         id: create-assigned-issue
