@@ -29,16 +29,19 @@ jobs:
             | jq -r '.issues[].key')
           
           for key in $subtask_key; do
-            response=$(curl -s --request PUT \
-              --url "${{ env.JIRA_URL }}/rest/api/2/issue/${key}" \
-              --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
-              --header "Content-Type: application/json" \
-              --data '{
-                "fields": {
-                  "resolution": {
-                    "name": "Done"
-                  }
+            response_file=$(mktemp)
+            curl -s --request PUT \
+            --url "${{ env.JIRA_URL }}/rest/api/2/issue/${key}" \
+            --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
+            --header "Content-Type: application/json" \
+            --data '{
+              "fields": {
+                "resolution": {
+                  "name": "Done"
                 }
-              }')
-            echo "Response for key ${key}: ${response}"
+              }
+            }' -o "$response_file"
+            response_status=$?
+            echo "Response status for key ${key}: $response_status"
+            rm "$response_file"
           done
