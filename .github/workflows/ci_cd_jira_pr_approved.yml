@@ -29,7 +29,7 @@ jobs:
             | jq -r '.issues[].key')
           
           for key in $subtask_key; do
-            curl -s --request PUT \
+            response=$(curl -s --request PUT \
               --url "${{ env.JIRA_URL }}/rest/api/2/issue/${key}" \
               --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
               --header "Content-Type: application/json" \
@@ -39,6 +39,6 @@ jobs:
                     "name": "Done"
                   }
                 }
-              }' > update-subtask.json
+              }')
+            echo "Response for key ${key}: ${response}"
           done
-          cat update-subtask.json
