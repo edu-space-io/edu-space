@@ -95,6 +95,8 @@ jobs:
             cat jira-subtask.json
             SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
           done
+    outputs:
+      assignee-issue-key: ${{ steps.create-assigned-issue.outputs.assignee-issue-key }}
 
   update_subtasks:
     needs: create_jira_issue
@@ -104,8 +106,8 @@ jobs:
       - name: Get PR details
         id: pr-details
         run: |
-          echo "assignee-issue-key=${{ steps.create-jira-issue.outputs.assignee-issue-key }}" >> $GITHUB_OUTPUT
-          echo "reviewer=${{ github.event.review.user.login }}" >> $GITHUB_OUTPUT
+          echo "assignee-issue-key=${{ needs.create_jira_issue.outputs.assignee-issue-key }}" >> $GITHUB_ENV
+          echo "reviewer=${{ github.event.review.user.login }}" >> $GITHUB_ENV
 
       - name: Update subtasks
         run: |
@@ -130,4 +132,4 @@ jobs:
                   }
                 }
               }'
-          done
+          done      
