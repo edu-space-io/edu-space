@@ -58,7 +58,7 @@ jobs:
           # Parse issue key from Jira response
           cat jira-issue.json
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
-          echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_ENV
+          echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
       - name: Create Jira issues for reviewers
         env:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
@@ -103,7 +103,7 @@ jobs:
     steps:
       - name: Update subtasks
         run: |
-          assignee_issue_key=$(grep -oP "assignee-issue-key=\K.*" $GITHUB_ENV)
+          assignee_issue_key=$(echo '${{ needs.create_jira_issue.outputs.assignee-issue-key }}')
           reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.review.user.login }}" '.[$key]')
           subtask_key=$(curl -s --request GET \
             --url "${{ env.JIRA_URL }}/rest/api/2/search?jql=project=${{ env.PROJECT_KEY }} AND parent=${assignee_issue_key} AND assignee=${reviewer_id}" \
