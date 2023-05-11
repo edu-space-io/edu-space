@@ -111,7 +111,7 @@ jobs:
         run: |
           reviewer=${{ steps.pr-details.outputs.reviewer }}
           reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
-          assignee_issue_key=${{ steps.pr-details.outputs.assignee-issue-key }}
+          assignee_issue_key=${{ steps.create-assigned-issue.outputs.assignee-issue-key }}
           subtask_key=$(curl -s --request GET \
             --url "${{ env.JIRA_URL }}/rest/api/2/search?jql=project=${{ env.PROJECT_KEY }} AND parent=${{ assignee_issue_key }} AND assignee=${{ reviewer_id }}" \
             --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
