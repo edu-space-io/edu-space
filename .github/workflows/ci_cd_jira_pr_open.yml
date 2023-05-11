@@ -2,6 +2,8 @@ name: Create Jira issue on PR open
 on:
   pull_request:
     types: [ opened ]
+  pull_request_review:
+    types: [ submitted ]
 env:
   JIRA_URL: ${{ secrets.JIRA_URL }}
   PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
@@ -73,7 +75,7 @@ jobs:
             --header "Content-Type: application/json" \
             --header "Accept: application/json" \
             --user "${JIRA_AUTH}" \
-            -d '{
+            --data '{
               "fields": {
                 "project": {
                   "key": "'"${{ env.PROJECT_KEY }}"'"
@@ -92,4 +94,40 @@ jobs:
             }' > jira-subtask.json
             cat jira-subtask.json
             SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
+          done
+
+  update_subtasks:
+    needs: create_jira_issue
+    if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get PR details
+        id: pr-details
+        run: |
+          echo "assignee-issue-key=${{ steps.create-jira-issue.outputs.assignee-issue-key }}" >> $GITHUB_ENV
+          echo "reviewer=${{ github.event.review.user.login }}" >> $GITHUB_ENV
+
+      - name: Update subtasks
+        run: |
+          reviewer=${{ steps.pr-details.outputs.reviewer }}
+          reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
+          assignee_issue_key=${{ steps.pr-details.outputs.assignee-issue-key }}
+          subtask_key=$(curl -s --request GET \
+            --url "${{ env.JIRA_URL }}/rest/api/2/search?jql=project=${{ env.PROJECT_KEY }} AND parent=${{ assignee_issue_key }} AND assignee=${{ reviewer_id }}" \
+            --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
+            --header "Content-Type: application/json" \
+            | jq -r '.issues[].key')
+          
+          for key in $subtask_key; do
+            curl -s --request PUT \
+              --url "${{ env.JIRA_URL }}/rest/api/2/issue/${key}" \
+              --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
+              --header "Content-Type: application/json" \
+              --data '{
+                "fields": {
+                  "resolution": {
+                    "name": "Done"
+                  }
+                }
+              }'
           done
