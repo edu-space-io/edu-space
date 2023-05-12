@@ -49,7 +49,7 @@ jobs:
               "issuetype": {
                   "name": "'"${{ env.ISSUE_TYPE }}"'"
               },
-              "summary": "'"${PR_TITLE} - ${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER}"'",
+              "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${PR_TITLE}"'",
               "description": "'"${{ env.DESCRIPTION }}"'",
               "assignee": {
                 "accountId": "'"${assignee_id}"'"
@@ -88,7 +88,7 @@ jobs:
                 "issuetype": {
                   "name": "Sub-task"
                 },
-                "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${PR_TITLE} - Review by ${reviewer}"'",
+                "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${PR_TITLE} - Reviewed by ${reviewer}"'",
                 "assignee": {
                   "accountId": "'"${reviewer_id}"'"
                 }
@@ -106,7 +106,7 @@ jobs:
         id: search
         uses: tomhjp/gh-action-jira-search@v0.2.2
         with:
-          jql: 'project="ES" AND text ~ "#166 " AND assignee = "712020:2ebe3066-df60-45f0-9653-0545cc9ebacc"'
+          jql: 'project = "ES" AND text ~ "#166 " AND assignee = "712020:2ebe3066-df60-45f0-9653-0545cc9ebacc"'
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
