@@ -101,12 +101,19 @@ jobs:
   update_subtasks:
     if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
     runs-on: ubuntu-latest
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+
     steps:
+      - name: Get reviewer ID
+        id: get-reviewer-id
+        run: |
+          reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.review.user.login }}" '.[$key]') >> $GITHUB_OUTPUT
       - name: Search
         id: search
         uses: tomhjp/gh-action-jira-search@v0.2.2
         with:
-          jql: 'project = "ES" AND text ~ "#166 " AND assignee = "712020:2ebe3066-df60-45f0-9653-0545cc9ebacc"'
+          jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ steps.get-reviewer-id.outputs.reviewer_id }}"'
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
