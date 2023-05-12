@@ -111,7 +111,7 @@ jobs:
           echo "JIRA_URL: ${{ env.JIRA_URL }}"
           echo "PROJECT_KEY: ${{ env.PROJECT_KEY }}"
           subtask_key=$(curl -s --request GET \
-            --url "${{ env.JIRA_URL }}/rest/api/2/search?jql=project=${{ env.PROJECT_KEY }} AND text~"#${PR_NUMBER}" AND text ~"#${PR_NUMBER}([^0-9]|$)" AND assignee=${reviewer_id}" \
+            --url "${{ env.JIRA_URL }}/rest/api/2/search?jql=project='${{ env.PROJECT }}'%20AND%20text%20~%20'${{ env.PR_NUMBER }}'%20AND%20assignee%20%3D%20'${{ env.ASSIGNEE_ID }}'" \
             --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
             --header "Content-Type: application/json" \
             | jq -r '.issues[0].key')
