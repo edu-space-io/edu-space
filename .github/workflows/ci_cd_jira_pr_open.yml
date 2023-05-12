@@ -101,29 +101,18 @@ jobs:
     if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     steps:
-      - name: Update subtasks
+      - name: Login
+        uses: atlassian/gajira-login@v2.0.0
         env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.review.user.login }}" '.[$key]')
-          echo "Reviewer: ${reviewer_id}"
-          echo "PR_NUMBER: ${{ env.PR_NUMBER }}"
-          echo "JIRA_URL: ${{ env.JIRA_URL }}"
-          echo "PROJECT_KEY: ${{ env.PROJECT_KEY }}"
-          subtask_key=$(curl -s --request GET \
-            --url "${{ env.JIRA_URL }}/rest/api/2/search?jql=project='${{ env.PROJECT }}'%20AND%20text%20~%20'${{ env.PR_NUMBER }}'%20AND%20assignee%20%3D%20'${{ env.ASSIGNEE_ID }}'" \
-            --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
-            --header "Content-Type: application/json" \
-            | jq -r '.issues[0].key')
-          echo "subtask_key: ${subtask_key}"
-          curl -s --request PUT \
-            --url "${{ env.JIRA_URL }}/rest/api/2/issue/${key}" \
-            --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
-            --header "Content-Type: application/json" \
-            --data '{
-              "fields": {
-                "resolution": {
-                  "name": "Done"
-                }
-              }
-            }'
+          JIRA_BASE_URL: https://edu-space.atlassian.net
+          JIRA_USER_EMAIL: atm.linderman@gmail.com
+          JIRA_API_TOKEN: ATATT3xFfGF0ILBl1zXmObtEhJjNpH1uU6ymNpvGSMPbh72_nwc7UruCPxCP8AQPSz47W8oDYlbUmDnO-OTR10qG4GM1aK8SMhjNAQJAO0kp7PRbWgG7fEgkWdTVaWIVIyWAuWAbGK3LzOH39UJjCW9ZDv7i_rs32tiVAfj76uOYIfuBHUR_YZA=435DCD13
+
+      - name: Search
+        id: search
+        uses: tomhjp/gh-action-jira-search@v0.1.0
+        with:
+          jql: 'ES-63'
+
+      - name: Log
+        run: echo "Found issue ${{ steps.search.outputs.issue }}"
