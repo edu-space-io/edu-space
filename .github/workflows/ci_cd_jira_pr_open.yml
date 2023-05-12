@@ -101,18 +101,14 @@ jobs:
     if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     steps:
-      - name: Login
-        uses: atlassian/gajira-login@v2.0.0
+      - name: Search
+        id: search
+        uses: tomhjp/gh-action-jira-search@v0.2.2
+        with:
+          jql: 'key = ES-63'
         env:
           JIRA_BASE_URL: https://edu-space.atlassian.net
           JIRA_USER_EMAIL: atm.linderman@gmail.com
           JIRA_API_TOKEN: ATATT3xFfGF0ILBl1zXmObtEhJjNpH1uU6ymNpvGSMPbh72_nwc7UruCPxCP8AQPSz47W8oDYlbUmDnO-OTR10qG4GM1aK8SMhjNAQJAO0kp7PRbWgG7fEgkWdTVaWIVIyWAuWAbGK3LzOH39UJjCW9ZDv7i_rs32tiVAfj76uOYIfuBHUR_YZA=435DCD13
-
-      - name: Search
-        id: search
-        uses: tomhjp/gh-action-jira-search@v0.1.0
-        with:
-          jql: 'ES-63'
-
       - name: Log
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
