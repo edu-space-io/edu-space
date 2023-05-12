@@ -106,11 +106,12 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.review.user.login }}" '.[$key]')
+          echo "Reviewer: ${reviewer_id}"
           subtask_key=$(curl -s --request GET \
-            --url "${{ env.JIRA_URL }}/rest/api/2/search?jql=project=${{ env.PROJECT_KEY }} AND text~'#${PR_NUMBER}' AND text ~'${PR_NUMBER}([^0-9]|$)' AND assignee=${reviewer_id}" \
+            --url "${{ env.JIRA_URL }}/rest/api/2/search?jql=project=${{ env.PROJECT_KEY }} AND text~'#${PR_NUMBER}' AND text ~'#${PR_NUMBER}([^0-9]|$)' AND assignee=${reviewer_id}" \
             --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
             --header "Content-Type: application/json" \
-            | jq -r '.issues[].key') > assignee_issue_keys.txt
+            | jq -r '.issues[].key')
       
           for key in $subtask_key; do
             curl -s --request PUT \
@@ -124,9 +125,4 @@ jobs:
                   }
                 }
               }'
-          done   
-      - name: Store artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: stored-data
-          path: assignee_issue_keys.txt
+          done
