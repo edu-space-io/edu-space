@@ -60,6 +60,11 @@ jobs:
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
           echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
           echo "${{ github.event.pull_request.number }}=${assignee_issue_key}" >> assignee_issue_keys.txt
+      - name: Store artifact
+        uses: actions/upload-artifact@v3
+        with:
+            name: stored-data
+            path: assignee_issue_keys.txt
       - name: Create Jira issues for reviewers
         env:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
@@ -102,10 +107,14 @@ jobs:
     if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: stored-data
       - name: Get assignee issue key by PR number
         run: |
           pr_id="${{ github.event.pull_request.number }}"
-          assignee_issue_key=$(grep -E "^${pr_id}=" assignee_issue_keys.txt | cut -d '=' -f 2)
+          assignee_issue_key=$(grep -E "^${pr_id}=" stored-data/assignee_issue_keys.txt | cut -d '=' -f 2)
           echo "ASSIGNEE_ISSUE_KEY=${assignee_issue_key}" >> $GITHUB_ENV
       - name: Update subtasks
         run: |
