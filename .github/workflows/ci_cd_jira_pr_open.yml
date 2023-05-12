@@ -76,7 +76,7 @@ jobs:
             --url "${JIRA_URL}/rest/api/2/issue/" \
             --header "Content-Type: application/json" \
             --header "Accept: application/json" \
-            --user "{{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
             --data '{
               "fields": {
                 "project": {
