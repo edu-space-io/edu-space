@@ -115,11 +115,10 @@ jobs:
         id: search
         uses: tomhjp/gh-action-jira-search@v0.2.2
         with:
-          jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.REVIEWER_ID }}"'
+          jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = ${{ steps.get-reviewer-id.outputs.reviewer_id }}'
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          REVIEWER_ID: ${{ steps.get-reviewer-id.outputs.reviewer_id }}
       - name: Log
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
