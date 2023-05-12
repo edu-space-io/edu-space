@@ -111,21 +111,19 @@ jobs:
           echo "JIRA_URL: ${{ env.JIRA_URL }}"
           echo "PROJECT_KEY: ${{ env.PROJECT_KEY }}"
           subtask_key=$(curl -s --request GET \
-            --url "${{ env.JIRA_URL }}/rest/api/2/search?jql=project=${{ env.PROJECT_KEY }} AND text~'#${PR_NUMBER}' AND text ~'#${PR_NUMBER}([^0-9]|$)' AND assignee=${reviewer_id}" \
+            --url "${{ env.JIRA_URL }}/rest/api/2/search?jql=project=${{ env.PROJECT_KEY }} AND text~"#${PR_NUMBER}" AND text ~"#${PR_NUMBER}([^0-9]|$)" AND assignee=${reviewer_id}" \
             --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
             --header "Content-Type: application/json" \
-            | jq -r '.issues[].key')
-      
-          for key in $subtask_key; do
-            curl -s --request PUT \
-              --url "${{ env.JIRA_URL }}/rest/api/2/issue/${key}" \
-              --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
-              --header "Content-Type: application/json" \
-              --data '{
-                "fields": {
-                  "resolution": {
-                    "name": "Done"
-                  }
+            | jq -r '.issues[0].key')
+          echo "subtask_key: ${subtask_key}"
+          curl -s --request PUT \
+            --url "${{ env.JIRA_URL }}/rest/api/2/issue/${key}" \
+            --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
+            --header "Content-Type: application/json" \
+            --data '{
+              "fields": {
+                "resolution": {
+                  "name": "Done"
                 }
-              }'
-          done
+              }
+            }'
