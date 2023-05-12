@@ -8,7 +8,8 @@ env:
   JIRA_URL: ${{ secrets.JIRA_URL }}
   PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
   ISSUE_TYPE: ${{ secrets.JIRA_ISSUE_TYPE }}
-  JIRA_AUTH: ${{ secrets.JIRA_AUTH }}
+  JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+  JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
 jobs:
   create_jira_issue:
     if: github.event_name == 'pull_request'
@@ -39,7 +40,7 @@ jobs:
           --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
           --header "Content-Type: application/json" \
           --header "Accept: application/json" \
-          --user "${{ env.JIRA_AUTH }}" \
+          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
           -d '{
             "fields": {
               "project": {
@@ -75,7 +76,7 @@ jobs:
             --url "${JIRA_URL}/rest/api/2/issue/" \
             --header "Content-Type: application/json" \
             --header "Accept: application/json" \
-            --user "${JIRA_AUTH}" \
+            --user "{{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
             --data '{
               "fields": {
                 "project": {
@@ -105,10 +106,10 @@ jobs:
         id: search
         uses: tomhjp/gh-action-jira-search@v0.2.2
         with:
-          jql: 'project="ES" AND text ~ "166" AND assignee = "712020:21e3a790-9137-4db1-8aba-5b92f5461de4"'
+          jql: 'project="ES" AND text ~ "#166" AND text ~ "" AND assignee = "712020:2ebe3066-df60-45f0-9653-0545cc9ebacc"'
         env:
-          JIRA_BASE_URL: https://edu-space.atlassian.net
-          JIRA_USER_EMAIL: atm.linderman@gmail.com
-          JIRA_API_TOKEN: ATATT3xFfGF0ILBl1zXmObtEhJjNpH1uU6ymNpvGSMPbh72_nwc7UruCPxCP8AQPSz47W8oDYlbUmDnO-OTR10qG4GM1aK8SMhjNAQJAO0kp7PRbWgG7fEgkWdTVaWIVIyWAuWAbGK3LzOH39UJjCW9ZDv7i_rs32tiVAfj76uOYIfuBHUR_YZA=435DCD13
+          JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
       - name: Log
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
