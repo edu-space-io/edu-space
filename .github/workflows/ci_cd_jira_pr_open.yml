@@ -110,8 +110,8 @@ jobs:
             --url "${{ env.JIRA_URL }}/rest/api/2/search?jql=project=${{ env.PROJECT_KEY }} AND text~'#${PR_NUMBER}' AND text ~'${PR_NUMBER}([^0-9]|$)' AND assignee=${reviewer_id}" \
             --header "Authorization: Basic ${{ secrets.JIRA_AUTH }}" \
             --header "Content-Type: application/json" \
-            | jq -r '.issues[].key')
-          
+            | jq -r '.issues[].key') > assignee_issue_keys.txt
+      
           for key in $subtask_key; do
             curl -s --request PUT \
               --url "${{ env.JIRA_URL }}/rest/api/2/issue/${key}" \
@@ -124,4 +124,9 @@ jobs:
                   }
                 }
               }'
-          done      
+          done   
+      - name: Store artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: stored-data
+          path: assignee_issue_keys.txt
