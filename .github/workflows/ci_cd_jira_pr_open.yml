@@ -119,7 +119,6 @@ jobs:
           JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          REVIEWER_ID: ${{ steps.get-reviewer-id.outputs.reviewer_id }}
         with:
           jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.REVIEWER_ID }}"'
       - name: Log
