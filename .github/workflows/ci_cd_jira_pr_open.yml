@@ -127,12 +127,12 @@ jobs:
       - name: Get Transition ID
         id: get-transition-id
         run: |
-          transition_id = $(curl GET \
-          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}/transitions" \
-          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-          --header "Accept: application/json" \
-          --header 'Content-Type: application/json' | \
-          jq '.transitions[] | select(.name == "Done") | .id')
+          transition_id = $(curl -s -x GET \
+            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}/transitions" \
+            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --header "Accept: application/json" \
+            --header 'Content-Type: application/json' | \
+            jq -r '.transitions[] | select(.name == "Done") | .id')
           echo "transition_id=${transition_id}" >> $GITHUB_ENV
           echo "transition_id=${transition_id}"
       - name: Change reviewer issue status
