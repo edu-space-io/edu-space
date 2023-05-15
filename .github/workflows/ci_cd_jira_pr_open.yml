@@ -126,38 +126,12 @@ jobs:
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
       - name: Get Transition ID
         id: get-transition-id
-        run: |
-          
-          curl -s -X POST \
-           --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
-           --header "Content-Type: application/json" \
-           --header "Accept: application/json" \
-           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-           --data '{
-             "fields": {
-               "project": {
-                 "key": "'"${{ env.PROJECT_KEY }}"'"
-               },
-               "parent": {
-                 "key": "'"${{ env.ASSIGNEE_ISSUE_KEY }}"'"
-               },
-               "issuetype": {
-                 "name": "Sub-task"
-               },
-               "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${PR_TITLE} - Reviewed by ${reviewer}"'",
-               "assignee": {
-                 "accountId": "'"${reviewer_id}"'"
-               }
-             }
-           }' > jira-subtask.json
-           cat jira-subtask.json
-           SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
-          
+        run: |          
           curl -s -x GET \
             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}/transitions" \
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
             --header "Accept: application/json" \
-            --header 'Content-Type: application/json'}' > transition_id.json
+            --header 'Content-Type: application/json' > transition_id.json
           cat transition.json
           transition_id=$(cat transition.json | jq -r '.transitions[] | select(.name == "Done") | .id')
           echo "transition_id=${transition_id}" >> $GITHUB_ENV
