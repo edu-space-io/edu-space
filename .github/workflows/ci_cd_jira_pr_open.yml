@@ -130,8 +130,7 @@ jobs:
           curl -s -x GET \
             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}/transitions" \
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-            --header "Accept: application/json" \
-            --header 'Content-Type: application/json' > transition.json
+            --header "Accept: application/json" > transition.json
           cat transition.json
           transition_id=$(cat transition.json | jq -r '.transitions[] | select(.name == "Done") | .id')
           echo "transition_id=${transition_id}" >> $GITHUB_ENV
