@@ -74,7 +74,7 @@ jobs:
             reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
             echo "Reviewer: ${reviewer_id}"
             curl -s -X POST \
-            --url "${JIRA_URL}/rest/api/2/issue/" \
+            --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
             --header "Content-Type: application/json" \
             --header "Accept: application/json" \
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
@@ -127,7 +127,7 @@ jobs:
       - name: Get Transition ID
         id: get-transition-id
         run: |
-          transition_id = $(curl GET 'https://your-jira-instance/rest/api/3/issue/{issueIdOrKey}/transitions' \
+          transition_id = $(curl GET '${{ env.JIRA_URL }}/rest/api/3/issue/{issueIdOrKey}/transitions' \
           --header 'Authorization: Basic your-base64-encoded-credentials' \
           --header 'Content-Type: application/json' | \
           jq '.transitions[] | select(.name == "Done") | .id')
@@ -136,10 +136,10 @@ jobs:
       - name: Change reviewer issue status
         run: |
           result = $(curl -s --request PUT \
-            --url "${JIRA_URL}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
-            --header "Authorization: Basic $auth_token" \
-            --header "Content-Type: application/json" \
-            --data '{
+          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
+          --header "Authorization: Basic $auth_token" \
+          --header "Content-Type: application/json" \
+          --data '{
             "transition": {
               "id": "${{ env.transition_id }}"   // ID of the "approved" transition in your Jira workflow
             }
