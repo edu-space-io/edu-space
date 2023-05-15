@@ -144,6 +144,6 @@ jobs:
           --header "Content-Type: application/json" \
           --data '{
             "transition": {
-              "id": "${{ env.transition_id }}"   // ID of the "approved" transition in your Jira workflow
+              "id": "'"${{ env.transition_id }}"'"
             }
           }')
