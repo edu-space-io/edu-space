@@ -111,7 +111,7 @@ jobs:
           key=${{ github.event.review.user.login }}
           echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
           reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.review.user.login }}" '.[$key]')
-          echo "reviewer_id=${reviewer_id}" >> $GITHUB_OUTPUT
+          echo "reviewer_id=${reviewer_id}" >> $GITHUB_ENV
           echo "reviewer_id=${reviewer_id}"
       - name: Search
         id: search
