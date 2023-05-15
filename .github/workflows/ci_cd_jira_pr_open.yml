@@ -104,7 +104,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PR_NUMBER: ${{ github.event.pull_request.number }}
-
     steps:
       - name: Get reviewer ID
         id: get-reviewer-id
@@ -125,20 +124,25 @@ jobs:
           jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.reviewer_id }}"'
       - name: Log
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
+      - name: Get Transition ID
+        id: get-transition-id
+        run: |
+          transition_id = $(curl GET 'https://your-jira-instance/rest/api/3/issue/{issueIdOrKey}/transitions' \
+          --header 'Authorization: Basic your-base64-encoded-credentials' \
+          --header 'Content-Type: application/json' | \
+          jq '.transitions[] | select(.name == "Done") | .id')
+          echo "transition_id=${transition_id}" >> $GITHUB_ENV
+          echo "transition_id=${transition_id}"
       - name: Change reviewer issue status
         run: |
-          issue_key="${{ steps.search.outputs.issues }}"
-          api_url="https://edu-space.atlassian.net/rest/api/2/issue/${issue_key}"
-          
-          curl -s --request PUT \
-            --url "${{ env.JIRA_URL }}/rest/api/2/issue/${{ steps.search.outputs.issue }}" \
-            --user "${{ env.JIRA_AUTH }}" \
+          result = $(curl -s --request PUT \
+            --url "${JIRA_URL}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
+            --header "Authorization: Basic $auth_token" \
             --header "Content-Type: application/json" \
             --data '{
-              "fields": {
-                "resolution": {
-                  "name": "Done"
-                }
-              }
-            }'
-
+            "transition": {
+              "id": "${{ env.transition_id }}"   // ID of the "approved" transition in your Jira workflow
+            }
+          }')
+          echo "result=${result}" >> $GITHUB_ENV 
+          
