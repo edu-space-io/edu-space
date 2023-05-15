@@ -127,8 +127,10 @@ jobs:
       - name: Get Transition ID
         id: get-transition-id
         run: |
-          transition_id = $(curl GET '${{ env.JIRA_URL }}/rest/api/3/issue/{issueIdOrKey}/transitions' \
-          --header 'Authorization: Basic your-base64-encoded-credentials' \
+          transition_id = $(curl GET \
+          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}/transitions" \
+          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+          --header "Accept: application/json" \
           --header 'Content-Type: application/json' | \
           jq '.transitions[] | select(.name == "Done") | .id')
           echo "transition_id=${transition_id}" >> $GITHUB_ENV
@@ -137,7 +139,8 @@ jobs:
         run: |
           result = $(curl -s --request PUT \
           --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
-          --header "Authorization: Basic $auth_token" \
+          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+          --header "Accept: application/json" \
           --header "Content-Type: application/json" \
           --data '{
             "transition": {
