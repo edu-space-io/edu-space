@@ -109,7 +109,8 @@ jobs:
         id: get-reviewer-id
         run: |
           key=${{ github.event.review.user.login }}
-          reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.review.user.login }}" '.[$key]') >> $GITHUB_OUTPUT
+          echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
+          echo "reviewer_id='${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.review.user.login }}" '.[$key]') >> $GITHUB_OUTPUT
           echo "reviewer_id=${reviewer_id}"
       - name: Search
         id: search
