@@ -110,8 +110,8 @@ jobs:
         run: |
           key=${{ github.event.review.user.login }}
           echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
-          echo "reviewer_id='${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.review.user.login }}" '.[$key]') >> $GITHUB_OUTPUT
-          echo "reviewer_id=${reviewer_id}"
+          reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.review.user.login }}" '.[$key]')
+          echo "reviewer_id=${reviewer_id}" >> $GITHUB_ENV
       - name: Search
         id: search
         uses: tomhjp/gh-action-jira-search@v0.2.2
