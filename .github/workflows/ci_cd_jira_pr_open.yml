@@ -144,7 +144,7 @@ jobs:
           --header "Content-Type: application/json" \
           --data '{
             "transition": {
-              "id": "'"${{ env.transition_id }}"'"
+              "id": "'"${env.transition_id}"'"
             },
             "fields": {}
           }' > transition.json
