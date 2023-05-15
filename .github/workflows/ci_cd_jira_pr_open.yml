@@ -137,7 +137,7 @@ jobs:
           echo "transition_id=${transition_id}"
       - name: Change reviewer issue status
         run: |
-          $(curl -s --request PUT \
+          curl -s --request PUT \
           --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
           --header "Accept: application/json" \
@@ -146,4 +146,5 @@ jobs:
             "transition": {
               "id": "'"${{ env.transition_id }}"'"
             }
-          }')
+          }' > transition.json
+          cat transition.json
