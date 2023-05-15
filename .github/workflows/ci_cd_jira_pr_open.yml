@@ -145,6 +145,7 @@ jobs:
           --data '{
             "transition": {
               "id": "'"${{ env.transition_id }}"'"
-            }
+            },
+            "fields": {}
           }' > transition.json
           cat transition.json
