@@ -138,13 +138,13 @@ jobs:
       - name: Change reviewer issue status
         run: |
           curl -s --request PUT \
-          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
+          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}/transitions" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
           --header "Accept: application/json" \
           --header "Content-Type: application/json" \
           --data '{
             "transition": {
-              "id": "'"${env.transition_id}"'"
+              "id": "${{ env.transition_id }}"
             },
             "fields": {}
           }' > transition.json
