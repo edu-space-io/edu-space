@@ -149,3 +149,47 @@ jobs:
             "fields": {}
           }' > transition.json
           cat transition.json
+      - name: Update first or second review time
+        run: |
+          # Get the current field values of first_review_time and second_review_time
+          fields=$(curl -s --request GET \
+            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
+            --header "Authorization: Basic <JIRA_AUTH_TOKEN>" \
+            --header "Content-Type: application/json" | jq -r '.fields')
+
+          first_review_time=$(echo "$fields" | jq -r '.first_review_time')
+          second_review_time=$(echo "$fields" | jq -r '.second_review_time')
+          
+          # Get the Jira issue key associated with the pull request
+          # Check if first_review_time field is empty for the issue
+          first_review_time=$(curl -s --request GET \
+            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}?fields=first_review_time" \
+            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --header "Accept: application/json" \
+            | jq -r '.fields.first_review_time')
+          if [ "$first_review_time" == "null" ]; then
+            # First review - update first_review_time field
+            curl -s --request PUT \
+            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
+            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --header "Accept: application/json" \
+            --header "Content-Type: application/json" \
+            --data "{\"fields\":{\"first_review_time\":\"$(date -u +%FT%TZ)\"}}"
+          fi
+            
+            # Check if second_review_time field is empty for the issue
+          second_review_time=$(curl -s --request GET \
+            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}?fields=second_review_time" \
+            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --header "Accept: application/json" \
+            | jq -r '.fields.second_review_time')
+          if [ "$second_review_time" == "null" ]; then
+            # Second review - update second_review_time field
+            curl -s --request PUT \
+            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
+            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --header "Accept: application/json" \
+            --header "Content-Type: application/json" \
+            --data "{\"fields\":{\"second_review_time\":\"$(date -u +%FT%TZ)\"}}"
+          fi
+
