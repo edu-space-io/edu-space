@@ -134,10 +134,10 @@ jobs:
           cat transition.json
           transition_id=$(cat transition.json | jq -r '.transitions[] | select(.name == "Done") | .id')
           echo "transition_id=${transition_id}" >> $GITHUB_ENV
-          echo "transition_id=${transition_id}"
+          echo "transition_id = ${transition_id}"
       - name: Change reviewer issue status
         run: |
-          curl -s --request PUT \
+          curl -s --request POST \
           --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}/transitions" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
           --header "Accept: application/json" \
