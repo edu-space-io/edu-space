@@ -156,9 +156,6 @@ jobs:
             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
             --header "Authorization: Basic <JIRA_AUTH_TOKEN>" \
             --header "Content-Type: application/json" | jq -r '.fields')
-
-          first_review_time=$(echo "$fields" | jq -r '.first_review_time')
-          second_review_time=$(echo "$fields" | jq -r '.second_review_time')
           
           # Get the Jira issue key associated with the pull request
           # Check if first_review_time field is empty for the issue
