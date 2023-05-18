@@ -159,7 +159,7 @@ jobs:
             --header "Content-Type: application/json" > all_fields.json
           cat all_fields.json
           
-          custom_field = $(jq -r --arg name "first_review_time" '.[] | select(.name == "first_review_time") | .id' all_fields.json)
+          custom_field=$(jq -r --arg name "first_review_time" '.[] | select(.name == "first_review_time") | .id' all_fields.json)
           echo "custom_field = ${custom_field}"
           if [ "$first_review_time" == "null" ]; then
             curl -s --request PUT \
@@ -167,10 +167,10 @@ jobs:
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
-            --data "{\"fields\":{\"${custom_field}\":\"$(date +'%Y-%m-%dT%H:%M:%S.000%z')"
+            --data "{\"fields\":{\"${custom_field}\":\"$(date +'%Y-%m-%dT%H:%M:%S.000%z')\"}}"
           fi
           
-          custom_field = $(jq -r --arg name "second_review_time" '.[] | select(.name == "second_review_time") | .id' all_fields.json)
+          custom_field=$(jq -r --arg name "second_review_time" '.[] | select(.name == "second_review_time") | .id' all_fields.json)
           echo "custom_field = ${custom_field}"
           if [ "$second_review_time" == "null" ]; then
             # Second review - update second_review_time field
