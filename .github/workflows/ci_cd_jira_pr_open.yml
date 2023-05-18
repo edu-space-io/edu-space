@@ -154,7 +154,7 @@ jobs:
           custom_fields=("first_review_time", "second_review_time", "files_changed", "changes_stats")
           
           curl -s --request GET \
-            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
+            --url "${{ env.JIRA_URL }}/rest/api/3/field" \
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
             --header "Content-Type: application/json" > all_fields.json
           cat all_fields.json
