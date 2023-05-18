@@ -126,7 +126,7 @@ jobs:
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
       - name: Get Transition ID
         id: get-transition-id
-        run: |
+        run: |          
           curl --request GET \
             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}/transitions" \
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
@@ -151,42 +151,24 @@ jobs:
           cat transition.json
       - name: Update first or second review time
         run: |
-          # Get the current field values of first_review_time and second_review_time
-          fields=$(curl -s --request GET \
+          custom_fields=("first_review_time", "second_review_time", "files_changed", "changes_stats")
+          
+          curl -s --request GET \
             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-            --header "Content-Type: application/json" | jq -r '.fields')
+            --header "Content-Type: application/json" > all_fields.json
           
-          # Get the Jira issue key associated with the pull request
-          # Check if first_review_time field is empty for the issue
-          first_review_time=$(curl -s --request GET \
-            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}?fields=first_review_time" \
-            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-            --header "Accept: application/json" \
-            | jq -r '.fields.first_review_time')
+          custom_field = $(jq -r --arg name "first_review_time" '.[] | select(.name == $name) | .id' all_fields.json)
           if [ "$first_review_time" == "null" ]; then
-            # First review - update first_review_time field
             curl -s --request PUT \
             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
-            --data '{
-              "transition": {
-                "id": "${{ env.transition_id }}"
-              },
-              "fields": {
-                "first_review_time": "'"$(date -u +%FT%TZ)"'"
-              }
-            }' > transition.json
+            --data "{\"fields\":{\"${custom_field}\":\"$(date +'%Y-%m-%dT%H:%M:%S.000%z')"
           fi
           
-            # Check if second_review_time field is empty for the issue
-          second_review_time=$(curl -s --request GET \
-            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}?fields=second_review_time" \
-            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-            --header "Accept: application/json" \
-            | jq -r '.fields.second_review_time')
+          custom_field = $(jq -r --arg name "second_review_time" '.[] | select(.name == $name) | .id' all_fields.json)
           if [ "$second_review_time" == "null" ]; then
             # Second review - update second_review_time field
             curl -s --request PUT \
@@ -195,12 +177,9 @@ jobs:
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
             --data '{
-              "transition": {
-                  "id": "${{ env.transition_id }}"
-              },
               "fields": {
-                "second_review_time": "$(date -u +%FT%TZ)"
+                "'"${custom_field}"'": "'"$(date +'%Y-%m-%dT%H:%M:%S.000%z')"'"
               }
-            }' > transition.json
+            }'
           fi
-          cat transition.json
+
