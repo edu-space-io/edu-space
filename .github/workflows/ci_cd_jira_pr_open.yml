@@ -166,18 +166,27 @@ jobs:
           
           first_review_time=$(echo "$fields" | jq -r '.first_review_time')
           second_review_time=$(echo "$fields" | jq -r '.second_review_time')
+          
+          response=$(curl -s --request GET \
+            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
+            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --header "Accept: application/json")
           custom_field=$(jq -r --arg name "first_review_time" '.[] | select(.name == "first_review_time") | .id' all_fields.json)
+          first_review_time=$(echo "$response" | jq -r ".fields.${custom_field}")
           echo "custom_field = ${custom_field}"
-          curl -s --request PUT \
-          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${parent_key}" \
-          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-          --header "Accept: application/json" \
-          --header "Content-Type: application/json" \
-          --data "{\"fields\":{\"${custom_field}\":\"$(date +'%Y-%m-%dT%H:%M:%S.000%z')\"}}"
+          if [ "$first_review_time" == "null" ]; then
+            curl -s --request PUT \
+            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${parent_key}" \
+            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --header "Accept: application/json" \
+            --header "Content-Type: application/json" \
+            --data "{\"fields\":{\"${custom_field}\":\"$(date +'%Y-%m-%dT%H:%M:%S.000%z')\"}}"
+          fi
           
           custom_field=$(jq -r --arg name "second_review_time" '.[] | select(.name == "second_review_time") | .id' all_fields.json)
+          second_review_time=$(echo "$response" | jq -r ".fields.${custom_field}")
           echo "custom_field = ${custom_field}"
-          if [ "$second_review_time" == "null" ]; then
+          if [ "$second_review_time" == "null" ] && [ "$first_review_time" ]; then
             # Second review - update second_review_time field
             curl -s --request PUT \
             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${parent_key}" \
