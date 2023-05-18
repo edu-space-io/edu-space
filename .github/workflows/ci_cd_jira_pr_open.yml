@@ -126,7 +126,7 @@ jobs:
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
       - name: Get Transition ID
         id: get-transition-id
-        run: |          
+        run: |
           curl --request GET \
             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}/transitions" \
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
@@ -171,9 +171,16 @@ jobs:
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
-            --data "{\"fields\":{\"first_review_time\":\"$(date -u +%FT%TZ)\"}}"
+            --data '{
+              "transition": {
+                "id": "${{ env.transition_id }}"
+              },
+              "fields": {
+                "first_review_time": "'"$(date -u +%FT%TZ)"'"
+              }
+            }' > transition.json
           fi
-            
+          
             # Check if second_review_time field is empty for the issue
           second_review_time=$(curl -s --request GET \
             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}?fields=second_review_time" \
@@ -187,6 +194,13 @@ jobs:
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
-            --data "{\"fields\":{\"second_review_time\":\"$(date -u +%FT%TZ)\"}}"
+            --data '{
+              "transition": {
+                  "id": "${{ env.transition_id }}"
+              },
+              "fields": {
+                "second_review_time": "$(date -u +%FT%TZ)"
+              }
+            }' > transition.json
           fi
-
+          cat transition.json
