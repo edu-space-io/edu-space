@@ -158,7 +158,7 @@ jobs:
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
             --header "Content-Type: application/json" > all_fields.json
           
-          custom_field = $(jq -r --arg name "first_review_time" '.[] | select(.name == $name) | .id' all_fields.json)
+          custom_field = $(jq -r --arg name "first_review_time" '.[] | select(.name == "first_review_time") | .id' all_fields.json)
           if [ "$first_review_time" == "null" ]; then
             curl -s --request PUT \
             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
@@ -168,7 +168,7 @@ jobs:
             --data "{\"fields\":{\"${custom_field}\":\"$(date +'%Y-%m-%dT%H:%M:%S.000%z')"
           fi
           
-          custom_field = $(jq -r --arg name "second_review_time" '.[] | select(.name == $name) | .id' all_fields.json)
+          custom_field = $(jq -r --arg name "second_review_time" '.[] | select(.name == "second_review_time") | .id' all_fields.json)
           if [ "$second_review_time" == "null" ]; then
             # Second review - update second_review_time field
             curl -s --request PUT \
