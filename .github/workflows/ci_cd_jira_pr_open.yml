@@ -152,6 +152,11 @@ jobs:
       - name: Update first or second review time
         run: |
           custom_fields=("first_review_time", "second_review_time", "files_changed", "changes_stats")
+          response=$(curl -s --request GET \
+            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
+            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --header "Accept: application/json")
+          parent_key=$(echo "$response" | jq -r '.fields.parent.key')
           
           curl -s --request GET \
             --url "${{ env.JIRA_URL }}/rest/api/3/field" \
@@ -159,10 +164,12 @@ jobs:
             --header "Content-Type: application/json" > all_fields.json
           cat all_fields.json
           
+          first_review_time=$(echo "$fields" | jq -r '.first_review_time')
+          second_review_time=$(echo "$fields" | jq -r '.second_review_time')
           custom_field=$(jq -r --arg name "first_review_time" '.[] | select(.name == "first_review_time") | .id' all_fields.json)
           echo "custom_field = ${custom_field}"
           curl -s --request PUT \
-          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
+          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${parent_key}}" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
           --header "Accept: application/json" \
           --header "Content-Type: application/json" \
@@ -173,7 +180,7 @@ jobs:
           if [ "$second_review_time" == "null" ]; then
             # Second review - update second_review_time field
             curl -s --request PUT \
-            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
+            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${parent_key}" \
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
