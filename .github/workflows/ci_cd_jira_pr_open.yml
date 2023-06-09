@@ -8,6 +8,7 @@ env:
   JIRA_URL: ${{ secrets.JIRA_URL }}
   PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
   ISSUE_TYPE: ${{ secrets.JIRA_ISSUE_TYPE }}
+  SUB_ISSUE_TYPE: ${{ secrets.JIRA_SUB_ISSUE_TYPE }}
   JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
   JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
   JIRA_AUTH: "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}"
@@ -87,7 +88,7 @@ jobs:
                   "key": "'"${{ env.ASSIGNEE_ISSUE_KEY }}"'"
                 },
                 "issuetype": {
-                  "name": "Sub-task"
+                  "name": "'"${{ env.SUB_ISSUE_TYPE }}"'"
                 },
                 "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${PR_TITLE} - Reviewed by ${reviewer}"'",
                 "assignee": {
@@ -149,6 +150,9 @@ jobs:
             "fields": {}
           }' > transition.json
           cat transition.json
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
       - name: Update first or second review time
         run: |
           custom_fields=("first_review_time", "second_review_time", "files_changed", "changes_stats")
@@ -208,7 +212,7 @@ jobs:
           curl -s --request PUT \
           --url "${{ env.JIRA_URL }}/rest/api/3/issue/${parent_key}" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-          --header "Accept: application/json" \
+          --header "Accept: application /json" \
           --header "Content-Type: application/json" \
           --data "{
             \"fields\": {
