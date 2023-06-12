@@ -47,7 +47,7 @@ jobs:
           --header "Content-Type: application/json" \
           --data "{
             \"fields\": {
-              \"${custom_field}\": ${files_changed}
+              \"files_changed\": ${files_changed}
             }
           }"
 
@@ -62,7 +62,7 @@ jobs:
           --header "Content-Type: application/json" \
           --data "{
             \"fields\": {
-              \"${custom_field}\": ${lines_changed}
+              \"lines_changed\": ${lines_changed}
             }
           }"
           
