@@ -43,7 +43,7 @@ jobs:
           --header "Content-Type: application/json" \
           --header "Accept: application/json" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-          -d '{
+          --data '{
             "fields": {
               "project": {
                   "key": "'"${{ env.PROJECT_KEY }}"'"
@@ -81,11 +81,11 @@ jobs:
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
           --header "Accept: application /json" \
           --header "Content-Type: application/json" \
-          --data "{
-            \"fields\": {
-              \"${custom_field}\": \"${files_changed}"\
+          --data '{
+            "fields": {
+              "'"${custom_field}"'": "'"${files_changed}"'"
             }
-          }"
+          }'
 
           lines_changed=$(git diff --shortstat "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" --no-index | awk '{print $1 + $4}')
           echo "lines_changed = ${lines_changed}"
