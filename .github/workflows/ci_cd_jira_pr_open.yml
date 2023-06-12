@@ -33,44 +33,7 @@ jobs:
           ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
           PR_NUMBER: ${{ steps.pr-details.outputs.number }}
           PR_TITLE: ${{ steps.pr-details.outputs.title }}
-        run: |
-          curl -s --request GET \
-          --url "${{ env.JIRA_URL }}/rest/api/3/field" \
-          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-          --header "Content-Type: application/json" > all_fields.json
-          
-          files_changed=$(curl -s --request GET \
-          --url "${{ github.api_url }}/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
-          --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-          --header "Accept: application/vnd.github.v3+json" | jq '. | length')
-          custom_field=$(jq -r --arg name "files_changed" '.[] | select(.name == "files_changed") | .id' all_fields.json)
-          echo "custom_field = ${custom_field}"
-          curl -s --request PUT \
-          --url "${{ env.JIRA_URL }}/rest/api/3/issue/" \
-          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-          --header "Accept: application /json" \
-          --header "Content-Type: application/json" \
-          --data "{
-            \"fields\": {
-              \"${custom_field}\": ${files_changed}
-            }
-          }"
-
-          lines_changed=$(git diff --shortstat "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" --no-index | awk '{print $1 + $4}')
-          echo "lines_changed = ${lines_changed}"
-          custom_field=$(jq -r --arg name "lines_changed" '.[] | select(.name == "lines_changed") | .id' all_fields.json)
-          echo "custom_field = ${custom_field}"
-          curl -s --request PUT \
-          --url "${{ env.JIRA_URL }}/rest/api/3/issue/" \
-          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-          --header "Accept: application/json" \
-          --header "Content-Type: application/json" \
-          --data "{
-            \"fields\": {
-              \"${custom_field}\": ${lines_changed}
-            }
-          }"
-          
+        run: |          
           key=${{ env.ASSIGNEE }}
           echo "ASSIGNEE: ${ASSIGNEE}"
           assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ env.ASSIGNEE }}" '.[$key]')
@@ -99,6 +62,44 @@ jobs:
           cat jira-issue.json
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
           echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
+          
+          
+          curl -s --request GET \
+          --url "${{ env.JIRA_URL }}/rest/api/3/field" \
+          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+          --header "Content-Type: application/json" > all_fields.json
+
+          files_changed=$(curl -s --request GET \
+          --url "${{ github.api_url }}/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+          --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          --header "Accept: application/vnd.github.v3+json" | jq '. | length')
+          custom_field=$(jq -r --arg name "files_changed" '.[] | select(.name == "files_changed") | .id' all_fields.json)
+          echo "custom_field = ${custom_field}"
+          curl -s --request PUT \
+          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ assignee_issue_key }}" \
+          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+          --header "Accept: application /json" \
+          --header "Content-Type: application/json" \
+          --data "{
+            \"fields\": {
+              \"${custom_field}\": ${files_changed}
+            }
+          }"
+
+          lines_changed=$(git diff --shortstat "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" --no-index | awk '{print $1 + $4}')
+          echo "lines_changed = ${lines_changed}"
+          custom_field=$(jq -r --arg name "lines_changed" '.[] | select(.name == "lines_changed") | .id' all_fields.json)
+          echo "custom_field = ${custom_field}"
+          curl -s --request PUT \
+          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ assignee_issue_key }}" \
+          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+          --header "Accept: application/json" \
+          --header "Content-Type: application/json" \
+          --data "{
+            \"fields\": {
+              \"${custom_field}\": ${lines_changed}
+            }
+          }"
       - name: Create Jira issues for reviewers
         env:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
