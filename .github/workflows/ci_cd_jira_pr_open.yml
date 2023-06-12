@@ -83,7 +83,7 @@ jobs:
           --header "Content-Type: application/json" \
           --data "{
             \"fields\": {
-              \"${custom_field}\": ${files_changed}
+              \"${custom_field}\": \"${files_changed}"\
             }
           }"
 
@@ -98,7 +98,7 @@ jobs:
           --header "Content-Type: application/json" \
           --data "{
             \"fields\": {
-              \"${custom_field}\": ${lines_changed}
+              \"${custom_field}\": \"${lines_changed}"\
             }
           }"
       - name: Create Jira issues for reviewers
