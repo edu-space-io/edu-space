@@ -152,7 +152,7 @@ jobs:
           cat transition.json
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@v35
+        run: echo "changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | wc -l)" >> $GITHUB_OUTPUT
       - name: Update first or second review time
         run: |
           custom_fields=("first_review_time", "second_review_time", "files_changed", "changes_stats")
