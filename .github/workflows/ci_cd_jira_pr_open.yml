@@ -34,6 +34,11 @@ jobs:
           PR_NUMBER: ${{ steps.pr-details.outputs.number }}
           PR_TITLE: ${{ steps.pr-details.outputs.title }}
         run: |
+          curl -s --request GET \
+          --url "${{ env.JIRA_URL }}/rest/api/3/field" \
+          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+          --header "Content-Type: application/json" > all_fields.json
+          
           files_changed=$(curl -s --request GET \
           --url "${{ github.api_url }}/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
           --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
@@ -47,7 +52,7 @@ jobs:
           --header "Content-Type: application/json" \
           --data "{
             \"fields\": {
-              \"files_changed\": ${files_changed}
+              \"${custom_field}\": ${files_changed}
             }
           }"
 
@@ -62,7 +67,7 @@ jobs:
           --header "Content-Type: application/json" \
           --data "{
             \"fields\": {
-              \"lines_changed\": ${lines_changed}
+              \"${custom_field}\": ${lines_changed}
             }
           }"
           
