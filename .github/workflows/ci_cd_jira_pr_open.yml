@@ -75,6 +75,7 @@ jobs:
           --header "Accept: application/vnd.github.v3+json" | jq '. | length')
           custom_field=$(jq -r --arg name "files_changed" '.[] | select(.name == "files_changed") | .id' all_fields.json)
           echo "custom_field = ${custom_field}"
+          echo "files_changed = ${files_changed}"
           curl -s --request PUT \
           --url "${{ env.JIRA_URL }}/rest/api/3/issue/${assignee_issue_key}" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
