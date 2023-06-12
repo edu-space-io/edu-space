@@ -33,7 +33,7 @@ jobs:
           ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
           PR_NUMBER: ${{ steps.pr-details.outputs.number }}
           PR_TITLE: ${{ steps.pr-details.outputs.title }}
-        run: |          
+        run: |
           key=${{ env.ASSIGNEE }}
           echo "ASSIGNEE: ${ASSIGNEE}"
           assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ env.ASSIGNEE }}" '.[$key]')
@@ -76,7 +76,7 @@ jobs:
           custom_field=$(jq -r --arg name "files_changed" '.[] | select(.name == "files_changed") | .id' all_fields.json)
           echo "custom_field = ${custom_field}"
           curl -s --request PUT \
-          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ assignee_issue_key }}" \
+          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${assignee_issue_key}" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
           --header "Accept: application /json" \
           --header "Content-Type: application/json" \
@@ -91,7 +91,7 @@ jobs:
           custom_field=$(jq -r --arg name "lines_changed" '.[] | select(.name == "lines_changed") | .id' all_fields.json)
           echo "custom_field = ${custom_field}"
           curl -s --request PUT \
-          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ assignee_issue_key }}" \
+          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${assignee_issue_key}" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
           --header "Accept: application/json" \
           --header "Content-Type: application/json" \
