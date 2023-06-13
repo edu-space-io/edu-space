@@ -74,7 +74,7 @@ jobs:
           --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
           --header "Accept: application/vnd.github.v3+json" | jq '. | length')
           custom_field_id=$(jq -r --arg name "files_changed" '.[] | select(.name == "files_changed") | .id' all_fields.json)
-          echo "custom_field_id = ${custom_field_id}"
+          echo "custom_field_id: ${custom_field_id} выф"
           echo "files_changed = ${files_changed}"
           curl -s --request PUT \
           --url "${{ env.JIRA_URL }}/rest/api/3/issue/${assignee_issue_key}" \
