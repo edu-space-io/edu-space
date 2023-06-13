@@ -87,20 +87,20 @@ jobs:
             }
           }"
 
-          lines_changed=$(git diff --shortstat "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" --no-index | awk '{print $1 + $4}')
-          echo "lines_changed = ${lines_changed}"
-          custom_field_id=$(jq -r --arg name "lines_changed" '.[] | select(.name == "lines_changed") | .id' all_fields.json)
-          echo "custom_field_id = ${custom_field_id}"
-          curl -s --request POST \
-          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${assignee_issue_key}" \
-          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-          --header "Accept: application/json" \
-          --header "Content-Type: application/json" \
-          --data "{
-            \"fields\": {
-              \"${custom_field_id}\": \"${lines_changed}"\
-            }
-          }"
+#          lines_changed=$(git diff --shortstat "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" --no-index | awk '{print $1 + $4}')
+#          echo "lines_changed = ${lines_changed}"
+#          custom_field_id=$(jq -r --arg name "lines_changed" '.[] | select(.name == "lines_changed") | .id' all_fields.json)
+#          echo "custom_field_id = ${custom_field_id}"
+#          curl -s --request POST \
+#          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${assignee_issue_key}" \
+#          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+#          --header "Accept: application/json" \
+#          --header "Content-Type: application/json" \
+#          --data "{
+#            \"fields\": {
+#              \"${custom_field_id}\": \"${lines_changed}"\
+#            }
+#          }"
       - name: Create Jira issues for reviewers
         env:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
