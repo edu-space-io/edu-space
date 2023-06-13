@@ -68,6 +68,8 @@ jobs:
           --url "${{ env.JIRA_URL }}/rest/api/3/field" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
           --header "Content-Type: application/json" > all_fields.json
+          
+          cat all_fields.json
 
           files_changed=$(curl -s --request GET \
           --url "${{ github.api_url }}/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
