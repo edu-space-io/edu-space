@@ -73,24 +73,24 @@ jobs:
           --url "${{ github.api_url }}/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
           --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
           --header "Accept: application/vnd.github.v3+json" | jq '. | length')
-          custom_field=$(jq -r --arg name "files_changed" '.[] | select(.name == "files_changed") | .id' all_fields.json)
-          echo "custom_field = ${custom_field}"
+          custom_field_id=$(jq -r --arg name "files_changed" '.[] | select(.name == "files_changed") | .id' all_fields.json)
+          echo "custom_field_id = ${custom_field_id}"
           echo "files_changed = ${files_changed}"
           curl -s --request PUT \
           --url "${{ env.JIRA_URL }}/rest/api/3/issue/${assignee_issue_key}" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
           --header "Accept: application /json" \
           --header "Content-Type: application/json" \
-          --data '{
-            "fields": {
-              "'"${custom_field}"'": "'"${files_changed}"'"
+          --data "{
+            \"fields\": {
+              \"$custom_field_id\": \"$files_changed\"
             }
-          }'
+          }"
 
           lines_changed=$(git diff --shortstat "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" --no-index | awk '{print $1 + $4}')
           echo "lines_changed = ${lines_changed}"
-          custom_field=$(jq -r --arg name "lines_changed" '.[] | select(.name == "lines_changed") | .id' all_fields.json)
-          echo "custom_field = ${custom_field}"
+          custom_field_id=$(jq -r --arg name "lines_changed" '.[] | select(.name == "lines_changed") | .id' all_fields.json)
+          echo "custom_field_id = ${custom_field_id}"
           curl -s --request PUT \
           --url "${{ env.JIRA_URL }}/rest/api/3/issue/${assignee_issue_key}" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
@@ -98,7 +98,7 @@ jobs:
           --header "Content-Type: application/json" \
           --data "{
             \"fields\": {
-              \"${custom_field}\": \"${lines_changed}"\
+              \"${custom_field_id}\": \"${lines_changed}"\
             }
           }"
       - name: Create Jira issues for reviewers
