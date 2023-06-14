@@ -56,7 +56,7 @@ jobs:
           echo "files_changed = ${files_changed}"
           echo "custom_field_id = ${custom_field_id}"
           curl -s -X POST \
-          --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
+          --url "${{ env.JIRA_URL }}/rest/api/3/issue/" \
           --header "Content-Type: application/json" \
           --header "Accept: application/json" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
@@ -69,7 +69,21 @@ jobs:
                 "name": "'"${{ env.ISSUE_TYPE }}"'"
               },
               "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${PR_TITLE}"'",
-              "description": "'"${{ env.DESCRIPTION }}"'",
+              "description": {
+                "type": "doc",
+                "version": 1,
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "'"${{ env.DESCRIPTION }}"'"
+                      }
+                    ]
+                  }
+                ]
+              },
               "assignee": {
                 "accountId": "'"${assignee_id}"'"
               },
@@ -82,7 +96,7 @@ jobs:
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
           echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
           
-          lines_changed=$(git diff --shortstat "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" --no-index | awk '{print $1 + $4}')
+          lines_changed=$(git diff --shortstat "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" | awk '{print $1 + $4}')
           echo "lines_changed = ${lines_changed}"
           custom_field_id=$(jq -r --arg name "lines_changed" '.[] | select(.name == "lines_changed") | .id' all_fields.json)
           echo "custom_field_id = ${custom_field_id}"
