@@ -59,27 +59,28 @@ jobs:
           else
           echo "Variable files_changed is not a number."
           fi
+          echo "custom_field_id = ${custom_field_id}"
           curl -s -X POST \
           --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
           --header "Content-Type: application/json" \
           --header "Accept: application/json" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-          --data "{
-            \"fields\": {
-              \"project\": {
-                \"key\": \"${{ env.PROJECT_KEY }}\"
+          --data '{
+            "fields": {
+              "project": {
+                "key": "'"${{ env.PROJECT_KEY }}"'"
               },
-              \"issuetype\": {
-                \"name\": \"${{ env.ISSUE_TYPE }}\"
+              "issuetype": {
+                "name": "'"${{ env.ISSUE_TYPE }}"'"
               },
-              \"summary\": \"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${PR_TITLE}\",
-              \"description\": \"${{ env.DESCRIPTION }}\",
-              \"assignee\": {
-                \"accountId\": \"${assignee_id}\"
+              "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${PR_TITLE}"'",
+              "description": "'"${{ env.DESCRIPTION }}"'",
+              "assignee": {
+                "accountId": "'"${assignee_id}"'"
               },
-              \"${custom_field_id}\": \${file_changed}
+              "'"${custom_field_id}"'": '${file_changed}'
             }
-          }" > jira-issue.json
+          }' > jira-issue.json
           # Parse issue key from Jira response
           cat jira-issue.json
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
