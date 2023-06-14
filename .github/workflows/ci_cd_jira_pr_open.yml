@@ -53,6 +53,7 @@ jobs:
           custom_field_id=$(jq -r --arg name "files_changed" '.[] | select(.name == "files_changed") | .id' all_fields.json)
           
           echo "custom_field_id = ${custom_field_id}"
+          $(echo "foo: " ${file_changed} | awk '{print int($0)}')
           curl -s -X POST \
           --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
           --header "Content-Type: application/json" \
