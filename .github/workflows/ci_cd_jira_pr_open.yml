@@ -44,6 +44,8 @@ jobs:
           --url "${{ env.JIRA_URL }}/rest/api/3/field" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
           --header "Content-Type: application/json" > all_fields.json
+          
+          cat all_fields.json
 
           #Find files_changed field id
           files_changed=$(curl -s --request GET \
@@ -70,49 +72,13 @@ jobs:
               "assignee": {
                 "accountId": "'"${assignee_id}"'"
               }
-              "'"custom_filed_id"'":'"$file_changed"'
+              "'"$custom_filed_id"'":'"$file_changed"'
             }
           }' > jira-issue.json
           # Parse issue key from Jira response
           cat jira-issue.json
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
-          echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
-          
-          
-         
-          
-#          cat all_fields.json
-#
-#
-#          echo "custom_field_id: ${custom_field_id} выф"
-#          echo "files_changed = ${files_changed}"
-#          curl --request PUT \
-#          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${assignee_issue_key}" \
-#          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-#          --header "Accept: application /json" \
-#          --header "Content-Type: application/json" \
-#          --data "{
-#            \"fields\": {
-#              \"$custom_field_id\": \"$files_changed\"
-#            }
-#          }" >> response.json
-#          cat response.json
-
-
-#          lines_changed=$(git diff --shortstat "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" --no-index | awk '{print $1 + $4}')
-#          echo "lines_changed = ${lines_changed}"
-#          custom_field_id=$(jq -r --arg name "lines_changed" '.[] | select(.name == "lines_changed") | .id' all_fields.json)
-#          echo "custom_field_id = ${custom_field_id}"
-#          curl -s --request POST \
-#          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${assignee_issue_key}" \
-#          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-#          --header "Accept: application/json" \
-#          --header "Content-Type: application/json" \
-#          --data "{
-#            \"fields\": {
-#              \"${custom_field_id}\": \"${lines_changed}"\
-#            }
-#          }"
+          echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUTы
       - name: Create Jira issues for reviewers
         env:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
