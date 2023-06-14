@@ -77,7 +77,7 @@ jobs:
               \"assignee\": {
                 \"accountId\": \"${assignee_id}\"
               },
-              \"${custom_field_id}\": \"${file_changed}\"
+              \"${custom_field_id}\": ${file_changed}
             }
           }" > jira-issue.json
           # Parse issue key from Jira response
