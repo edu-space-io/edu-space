@@ -54,7 +54,11 @@ jobs:
           
           echo "custom_field_id = ${custom_field_id}"
           echo "files_changed = ${files_changed}"
-          echo ${file_changed} | awk '{print int($0)}'
+          if [[ "${files_changed}" =~ ^[0-9]+$ ]]; then
+            echo "Variable files_changed is a number."
+          else
+          echo "Variable files_changed is not a number."
+          fi
           curl -s -X POST \
           --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
           --header "Content-Type: application/json" \
