@@ -70,7 +70,7 @@ jobs:
               "description": "'"${{ env.DESCRIPTION }}"'",
               "assignee": {
                 "accountId": "'"${assignee_id}"'"
-              }
+              },
               "'"$custom_filed_id"'":'"$file_changed"'
             }
           }' > jira-issue.json
