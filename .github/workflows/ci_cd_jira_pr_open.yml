@@ -54,14 +54,9 @@ jobs:
           
           echo "custom_field_id = ${custom_field_id}"
           echo "files_changed = ${files_changed}"
-          if [[ "${files_changed}" =~ ^[0-9]+$ ]]; then
-            echo "Variable files_changed is a number."
-          else
-          echo "Variable files_changed is not a number."
-          fi
           echo "custom_field_id = ${custom_field_id}"
           curl -s -X POST \
-          --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
+          --url "${{ env.JIRA_URL }}/rest/api/3/issue/" \
           --header "Content-Type: application/json" \
           --header "Accept: application/json" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
@@ -81,10 +76,28 @@ jobs:
               "'"${custom_field_id}"'": '${files_changed}'
             }
           }' > jira-issue.json
+          
           # Parse issue key from Jira response
           cat jira-issue.json
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
           echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
+          
+          lines_changed=$(git diff --shortstat "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" --no-index | awk '{print $1 + $4}')
+          echo "lines_changed = ${lines_changed}"
+          custom_field_id=$(jq -r --arg name "lines_changed" '.[] | select(.name == "lines_changed") | .id' all_fields.json)
+          echo "custom_field_id = ${custom_field_id}"
+          curl -s --request POST \
+          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${assignee_issue_key}" \
+          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+          --header "Accept: application/json" \
+          --header "Content-Type: application/json" \
+          --data '{
+            "fields": {
+              "'"${custom_field_id}"'": '${lines_changed}'
+            }
+          }' > foo.json
+
+          cat foo.json
       - name: Create Jira issues for reviewers
         env:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
