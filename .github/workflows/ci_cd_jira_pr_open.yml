@@ -46,17 +46,18 @@ jobs:
           --url "${{ env.JIRA_URL }}/rest/api/3/field" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
           --header "Content-Type: application/json" > all_fields.json
-          
-          #Find files_changed field id
+          git fetch origin master
+          lines_changed=$(git diff --shortstat origin/master HEAD | awk '{print $1 + $4}')
           files_changed=$(curl -s --request GET \
           --url "${{ github.api_url }}/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
           --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
           --header "Accept: application/vnd.github.v3+json" | jq '. | length')
-          custom_field_id=$(jq -r --arg name "files_changed" '.[] | select(.name == "files_changed") | .id' all_fields.json)
-          
-          echo "custom_field_id = ${custom_field_id}"
+          files_changed_field_id=$(jq -r --arg name "files_changed" '.[] | select(.name == "files_changed") | .id' all_fields.json)
+          lines_changed_field_id=$(jq -r --arg name "lines_changed" '.[] | select(.name == "lines_changed") | .id' all_fields.json)
+          echo "lines_changed = ${lines_changed}"
           echo "files_changed = ${files_changed}"
-          echo "custom_field_id = ${custom_field_id}"
+          echo "files_changed_field_id = ${files_changed_field_id}"
+          echo "lines_changed_field_id = ${lines_changed_field_id}"
           curl -s -X POST \
           --url "${{ env.JIRA_URL }}/rest/api/3/issue/" \
           --header "Content-Type: application/json" \
@@ -89,7 +90,8 @@ jobs:
               "assignee": {
                 "accountId": "'"${assignee_id}"'"
               },
-              "'"${custom_field_id}"'": '${files_changed}'
+              "'"${files_changed_field_id}"'": '${files_changed}',
+              "'"${lines_changed_field_id}"'": '${lines_changed}'
             }
           }' > jira-issue.json
           
@@ -97,23 +99,6 @@ jobs:
           cat jira-issue.json
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
           echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
-          git fetch origin master
-          lines_changed=$(git diff --shortstat origin/master HEAD | awk '{print $1 + $4}')
-          echo "lines_changed = ${lines_changed}"
-          custom_field_id=$(jq -r --arg name "lines_changed" '.[] | select(.name == "lines_changed") | .id' all_fields.json)
-          echo "custom_field_id = ${custom_field_id}"
-          curl -s --request POST \
-          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${assignee_issue_key}" \
-          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-          --header "Accept: application/json" \
-          --header "Content-Type: application/json" \
-          --data '{
-            "fields": {
-              "'"${custom_field_id}"'": '${lines_changed}'
-            }
-          }' > foo.json
-
-          cat foo.json
       - name: Create Jira issues for reviewers
         env:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
