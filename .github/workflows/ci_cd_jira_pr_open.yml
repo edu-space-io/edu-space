@@ -71,13 +71,13 @@ jobs:
               "assignee": {
                 "accountId": "'"${assignee_id}"'"
               },
-              "'"$custom_filed_id"'":'"$file_changed"'
+              "'"${custom_filed_id}"'":'"{$file_changed}"'
             }
           }' > jira-issue.json
           # Parse issue key from Jira response
           cat jira-issue.json
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
-          echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUTы
+          echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
       - name: Create Jira issues for reviewers
         env:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
