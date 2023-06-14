@@ -54,7 +54,7 @@ jobs:
           
           echo "custom_field_id = ${custom_field_id}"
           curl -s -X POST \
-          --url "${{ env.JIRA_URL }}/rest/api/3/issue/" \
+          --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
           --header "Content-Type: application/json" \
           --header "Accept: application/json" \
           --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
@@ -71,7 +71,7 @@ jobs:
               "assignee": {
                 "accountId": "'"${assignee_id}"'"
               },
-              "'"${custom_field_id}"'": "'"${file_changed}"'"
+              "'"${custom_field_id}"'": "${file_changed}"
             }
           }' > jira-issue.json
           # Parse issue key from Jira response
