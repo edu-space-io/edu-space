@@ -95,6 +95,7 @@ jobs:
           cat jira-issue.json
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
           echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
+          git fetch origin master
           lines_changed=$(git diff --shortstat origin/master HEAD | awk '{print $1 + $4}')
           echo "lines_changed = ${lines_changed}"
           custom_field_id=$(jq -r --arg name "lines_changed" '.[] | select(.name == "lines_changed") | .id' all_fields.json)
