@@ -198,6 +198,7 @@
               --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
               --header "Accept: application/json")
             parent_key=$(echo "$response" | jq -r '.fields.parent.key')
+            echo "parent_key=${parent_key}"
             
             curl -s --request GET \
               --url "${{ env.JIRA_URL }}/rest/api/3/field" \
