@@ -196,16 +196,10 @@
             PR_NUMBER=${{ github.event.pull_request.number }}
             echo "PR_NUMBER=${PR_NUMBER}"
             echo "github repository=${{ github.repository }}"
-            COMMENTS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-               -H "Accept: application/vnd.github.v3+json" \
-               "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments")
-            echo "COMMENTS=${COMMENTS}"
-            # Extract the approval count from the response
-             # Filter the comments by approved reviews
-            APPROVED_COMMENTS=$(echo "${COMMENTS}" | jq 'map(select(.state == "APPROVED"))')
-        
-            # Count the number of approved comments
-            APPROVAL_COUNT=$(echo "${APPROVED_COMMENTS}" | jq 'length')
+            REVIEWS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/reviews")
+            APPROVAL_COUNT=$(echo "${REVIEWS}" | jq '[.[] | select(.state == "APPROVED")] | length')
 
             echo "Approval count: ${APPROVAL_COUNT}"
             response=$(curl -s --request GET \
