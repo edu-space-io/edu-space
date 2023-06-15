@@ -204,8 +204,8 @@ jobs:
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
             --header "Content-Type: application/json" > all_fields.json
           
-          first_review_time=$(echo "$fields" | jq -r '.first_review_time')
-          second_review_time=$(echo "$fields" | jq -r '.second_review_time')
+          first_review_time_field_id=$(jq -r --arg name "first_review_time" '.[] | select(.name == "first_review_time") | .id' all_fields.json)
+          second_review_time_field_id=$(jq -r --arg name "second_review_time" '.[] | select(.name == "second_review_time") | .id' all_fields.json)
 
           # First review - update first_review_time field                    
           response=$(curl -s --request GET \
@@ -221,7 +221,7 @@ jobs:
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
             --header "Accept: application/json" \
             --header "Content-Type: application/json" \
-            --data "{\"fields\":{\"${custom_field}\":\"$(date +'%Y-%m-%dT%H:%M:%S.000%z')\"}}"
+            --data "{\"fields\":{\"${first_review_time_field_id}\":\"$(date +'%Y-%m-%dT%H:%M:%S.000%z')\"}}"
           fi
           
           # Second review - update second_review_time field          
@@ -236,7 +236,7 @@ jobs:
             --header "Content-Type: application/json" \
             --data '{
               "fields": {
-                "'"${custom_field}"'": "'"$(date +'%Y-%m-%dT%H:%M:%S.000%z')"'"
+                "'"${second_review_time_field_id}"'": "'"$(date +'%Y-%m-%dT%H:%M:%S.000%z')"'"
               }
             }'
           fi
