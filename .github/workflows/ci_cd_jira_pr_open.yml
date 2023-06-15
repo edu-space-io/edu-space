@@ -194,12 +194,14 @@
           run: |
             # Get the pull request number
             PR_NUMBER=${{ github.event.pull_request.number }}
-            
+            echo "PR_NUMBER=${PR_NUMBER}"
+            echo "github.repository=${github.repository}"
             # Make a GET request to fetch the pull request details
+            echo "secrets.GITHUB_TOKEN=${secrets.GITHUB_TOKEN}"
             PR_DETAILS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github.v3+json" \
               "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}")
-            
+            echo "PR_DETAILS=${PR_DETAILS}"
             # Extract the approval count from the response
             APPROVAL_COUNT=$(echo "${PR_DETAILS}" | jq '.reviews | map(select(.state == "APPROVED")) | length')
             echo "APPROVAL_COUNT=${APPROVAL_COUNT}"
