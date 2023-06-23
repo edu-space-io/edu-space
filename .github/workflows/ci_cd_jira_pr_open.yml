@@ -151,6 +151,7 @@ jobs:
           echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
           echo "reviewers=${reviewers}" >> $GITHUB_OUTPUT
+          echo "reviewers=${reviewers}"
       - name: Search
         id: search
         uses: tomhjp/gh-action-jira-search@v0.2.2
