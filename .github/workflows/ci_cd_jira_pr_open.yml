@@ -137,7 +137,7 @@ jobs:
             SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
           done
   add_reviewer:
-    if: github.event_name == 'pull_request' $$ github.event.action == 'review_requested'
+    if: github.event_name == 'pull_request' && github.event.action == 'review_requested'
     runs-on: ubuntu-latest
     env:
       PR_NUMBER: ${{ github.event.pull_request.number }}
