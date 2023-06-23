@@ -148,9 +148,8 @@ jobs:
         run: |
           key=${{ github.event.pull_request.assignee.login }}
           assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.assignee.login }}" '.[$key]')
-          echo "assignee_id=${assignee_id}"
-          echo "reviewers=${{ join(github.event.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
-          echo "reviewers_raw=${{ github.event.requested_reviewers }}"
+          echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
+          echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
           echo "reviewers=${reviewers}" >> $GITHUB_OUTPUT
       - name: Search
         id: search
@@ -160,54 +159,54 @@ jobs:
           JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          PARENT_ISSUE: ${{ steps.search.outputs.issue }}
         with:
           jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.assignee_id }}"'
       - name: Log
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
       - name: Create reviewer subtask
         run: |
-         reviewer_login="desired_reviewer_login"
-         parent_task_id="123456"  # Replace with the actual parent task ID
-         subtasks=$(curl -s --request GET \
-           --url "https://api.github.com/repos/${{ github.repository }}/issues/${parent_task_id}/subtasks" \
-           --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-           --header "Accept: application/vnd.github.v3+json" \
-           | jq -r '.[].title') 
-         if echo "$subtasks" | grep -q "^${reviewer_login}:"; then
-           echo "Subtask already created for reviewer: $reviewer_login"
-           else
-           echo "Subtask not yet created for reviewer: $reviewer_login"
-         fi
-         for reviewer in $(echo ${{ env.REVIEWERS }} | tr ',' '\n'); do
-            key=${reviewer}
-            reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
-            echo "Reviewer: ${reviewer_id}"
-            curl -s -X POST \
-            --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
-            --header "Content-Type: application/json" \
-            --header "Accept: application/json" \
-            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-            --data '{
-              "fields": {
-                "project": {
-                  "key": "'"${{ env.PROJECT_KEY }}"'"
-                },
-                "parent": {
-                  "key": "'"${{ steps.search.outputs.issue }}"'"
-                },
-                "issuetype": {
-                  "name": "'"${{ env.SUB_ISSUE_TYPE }}"'"
-                },
-                "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${PR_TITLE} - Reviewed by ${reviewer}"'",
-                "assignee": {
-                  "accountId": "'"${reviewer_id}"'"
-                }
-              }
-            }' > jira-subtask.json
-            cat jira-subtask.json
-            SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
+          for reviewer in $(echo ${{ env.REVIEWERS }} | tr ',' '\n'); do
+            subtasks=$(curl -s --request GET \
+             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ env.PARENT_ISSUE }}/subtask" \
+             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+             --header "Accept: application/json" \
+             | jq -r '.issues[].fields.assignee.name')
+            
+            if echo "$subtasks" | grep -q "^${reviewer}$"; then
+              echo "Subtask already created for reviewer: $reviewer"
+            else
+              echo "Subtask not yet created for reviewer: $reviewer"
+              key=${reviewer}
+                reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
+                echo "Reviewer: ${reviewer_id}"
+                curl -s -X POST \
+                --url "${{ env.JIRA_URL }}/rest/api/3/issue/" \
+                --header "Content-Type: application/json" \
+                --header "Accept: application/json" \
+                --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+                --data '{
+                  "fields": {
+                    "project": {
+                      "key": "'"${{ env.PROJECT_KEY }}"'"
+                    },
+                    "parent": {
+                      "key": "'"${{ env.PARENT_ISSUE }}"'"
+                    },
+                    "issuetype": {
+                      "name": "'"${{ env.SUB_ISSUE_TYPE }}"'"
+                    },
+                    "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${PR_TITLE} - Reviewed by ${reviewer}"'",
+                    "assignee": {
+                      "accountId": "'"${reviewer_id}"'"
+                    }
+                  }
+                }' > jira-subtask.json
+                cat jira-subtask.json
+                SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
+            fi
           done
-  update_subtasks:
+  approve_received:
     if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     env:
