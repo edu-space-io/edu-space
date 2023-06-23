@@ -1,7 +1,7 @@
 name: Create Jira issue on PR open
 on:
   pull_request:
-    types: [ opened ]
+    types: [ opened, review_requested ]
   pull_request_review:
     types: [ submitted ]
 env:
