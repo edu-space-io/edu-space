@@ -150,6 +150,7 @@ jobs:
           assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.assignee.login }}" '.[$key]')
           echo "assignee_id=${assignee_id}"
           echo "reviewers=${{ join(github.event.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
+          echo "reviewers_raw=${{ github.event.requested_reviewers }}"
           echo "reviewers=${reviewers}" >> $GITHUB_OUTPUT
       - name: Search
         id: search
@@ -165,6 +166,18 @@ jobs:
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
       - name: Create reviewer subtask
         run: |
+         reviewer_login="desired_reviewer_login"
+         parent_task_id="123456"  # Replace with the actual parent task ID
+         subtasks=$(curl -s --request GET \
+           --url "https://api.github.com/repos/${{ github.repository }}/issues/${parent_task_id}/subtasks" \
+           --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+           --header "Accept: application/vnd.github.v3+json" \
+           | jq -r '.[].title') 
+         if echo "$subtasks" | grep -q "^${reviewer_login}:"; then
+           echo "Subtask already created for reviewer: $reviewer_login"
+           else
+           echo "Subtask not yet created for reviewer: $reviewer_login"
+         fi
          for reviewer in $(echo ${{ env.REVIEWERS }} | tr ',' '\n'); do
             key=${reviewer}
             reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
