@@ -149,10 +149,10 @@ jobs:
         uses: tomhjp/gh-action-jira-search@v0.2.2
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
-          JIRA_USER_EMAIL: ${{ env.JIRA_USER_EMAIL }}
-          JIRA_API_TOKEN: ${{ env.JIRA_API_TOKEN }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         with:
-          jql: 'project = "${{ env.JIRA_PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} "'
+          jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} "'
       - name: Log
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
       - name: Create reviewer subtask
