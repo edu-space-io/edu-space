@@ -170,17 +170,18 @@ jobs:
           REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
         run: |
           for reviewer in $(echo ${{ env.REVIEWERS }} | tr ',' '\n'); do
-            subtasks=$(curl -s --request GET \
-             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ env.PARENT_ISSUE }}/subtask" \
-             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-             --header "Accept: application/json")
-            subtask_count=$(echo "$subtasks" | jq '.total')
-          
+          subtasks=$(curl -s --request GET \
+            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ env.PARENT_ISSUE }}" \
+            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --header "Accept: application/json")
+            
+            subtask_count=$(echo "$subtasks" | jq '.fields.subtasks | length')
+            
             if [ "$subtask_count" -gt 0 ]; then
-              assignees=$(echo "$subtasks" | jq -r '.issues[].fields.assignee.name')
-              echo "assignees=${assignees}"
+            assignees=$(echo "$subtasks" | jq -r '.fields.subtasks[].fields.assignee.name')
+            echo "::set-output name=assignees::$assignees"
             else
-              echo "assignees=null"
+            echo "::set-output name=assignees::"
             fi
           
             if echo "$assignees" | grep -q "^${reviewer}$"; then
