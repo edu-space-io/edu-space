@@ -1,9 +1,12 @@
 name: Create Jira issue on PR open
 on:
   pull_request:
-    types: [ opened, edited ]
+    types:
+      - opened
+      - review_requested
   pull_request_review:
-    types: [ submitted ]
+    types:
+      - submitted
 env:
   JIRA_URL: ${{ secrets.JIRA_URL }}
   PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
