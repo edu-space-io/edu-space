@@ -173,13 +173,20 @@ jobs:
             subtasks=$(curl -s --request GET \
              --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ env.PARENT_ISSUE }}/subtask" \
              --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-             --header "Accept: application/json" \
-             | jq -r '.issues[].fields.assignee.name')
-            
-            if echo "$subtasks" | grep -q "^${reviewer}$"; then
+             --header "Accept: application/json")
+            subtask_count=$(echo "$subtasks" | jq '.total')
+          
+            if [ "$subtask_count" -gt 0 ]; then
+              assignees=$(echo "$subtasks" | jq -r '.issues[].fields.assignee.name')
+              echo "assignees=${assignees}"
+            else
+              echo "assignees=null"
+            fi
+          
+            if echo "$assignees" | grep -q "^${reviewer}$"; then
               echo "Subtask already created for reviewer: $reviewer"
             else
-              echo "Subtask not yet created for reviewer: $reviewer"
+              echo "Subtask not yet created for reviewer: $reviewer. Creating subtask for reviewer."
               key=${reviewer}
                 reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
                 echo "Reviewer: ${reviewer_id}"
