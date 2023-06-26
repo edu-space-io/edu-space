@@ -143,6 +143,8 @@ jobs:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       REVIEWER_LOGIN: ${{ github.event.review.user.login }}
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
       - name: Get assignee ID
         id: pr-details
         run: |
@@ -150,22 +152,22 @@ jobs:
           assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.assignee.login }}" '.[$key]')
           echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
-          echo "reviewers=${reviewers}" >> $GITHUB_OUTPUT
           echo "reviewers=${reviewers}"
       - name: Search
         id: search
         uses: tomhjp/gh-action-jira-search@v0.2.2
         env:
-          REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
           JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          PARENT_ISSUE: ${{ steps.search.outputs.issue }}
         with:
           jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.assignee_id }}"'
       - name: Log
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
       - name: Create reviewer subtask
+        env:
+          PARENT_ISSUE: ${{ steps.search.outputs.issue }}
+          REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
         run: |
           for reviewer in $(echo ${{ env.REVIEWERS }} | tr ',' '\n'); do
             subtasks=$(curl -s --request GET \
