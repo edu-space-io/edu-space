@@ -200,7 +200,7 @@ jobs:
                 
             if [[ "${is_reviewer_assigned}" == false ]]; then
               echo "Subtask not yet created for reviewer: ${reviewer}. Creating subtask for reviewer."
-              key=${reviewer}
+              key="$reviewer"
               reviewer_id=$(echo '${{ env.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
               echo "Reviewer: ${reviewer_id}"
               curl -s -X POST \
