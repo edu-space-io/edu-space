@@ -184,6 +184,7 @@ jobs:
           
             is_reviewer_assigned=false
             for subtask in $(echo "${subtasks}" | jq -c '.[]'); do
+              echo "${subtask}"
               subtask_key=$(echo "${subtask}" | jq -r '.key')
               echo "${subtask_key}"
               subtask_data=$(curl -s --request GET \
