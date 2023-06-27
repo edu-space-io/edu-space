@@ -33,7 +33,7 @@ jobs:
           echo "number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
       - name: Create Jira issue for assignee
-        id: create-assigned-issue
+        id: create-assignee-issue
         env:
           DESCRIPTION: ${{ steps.pr-details.outputs.description }}
           ASSIGNEE: ${{ steps.pr-details.outputs.assignee }}
@@ -107,43 +107,7 @@ jobs:
           cat jira-issue.json
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
           echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
-      - name: Create Jira issues for reviewers
-        env:
-          DESCRIPTION: ${{ steps.pr-details.outputs.description }}
-          REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
-          ASSIGNEE_ISSUE_KEY: ${{ steps.create-assigned-issue.outputs.assignee-issue-key }}
-          PR_NUMBER: ${{ steps.pr-details.outputs.number }}
-          PR_TITLE: ${{ steps.pr-details.outputs.title }}
-        run: |
-          for reviewer in $(echo ${{ env.REVIEWERS }} | tr ',' '\n'); do
-            key=${reviewer}
-            reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
-            echo "Reviewer: ${reviewer_id}"
-            curl -s -X POST \
-            --url "${{ env.JIRA_URL }}/rest/api/2/issue/" \
-            --header "Content-Type: application/json" \
-            --header "Accept: application/json" \
-            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
-            --data '{
-              "fields": {
-                "project": {
-                  "key": "'"${{ env.PROJECT_KEY }}"'"
-                },
-                "parent": {
-                  "key": "'"${{ env.ASSIGNEE_ISSUE_KEY }}"'"
-                },
-                "issuetype": {
-                  "name": "'"${{ env.SUB_ISSUE_TYPE }}"'"
-                },
-                "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${PR_TITLE} - Reviewed by ${reviewer}"'",
-                "assignee": {
-                  "accountId": "'"${reviewer_id}"'"
-                }
-              }
-            }' > jira-subtask.json
-            cat jira-subtask.json
-            SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
-          done
+      
   add_reviewer:
     if: github.event.action == 'review_requested'
     runs-on: ubuntu-latest
