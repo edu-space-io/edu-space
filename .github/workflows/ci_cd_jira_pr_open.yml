@@ -183,9 +183,36 @@ jobs:
             echo "subtasks=${subtasks}"
           
             is_reviewer_assigned=false
+            for row in $(echo "${subtasks}" | jq -r '.[] | @base64'); do
+              _jq() {
+                echo "${row}" | base64 --decode | jq -r "${1}"
+              }
+              
+              id=$(_jq '.id')
+              summary=$(_jq '.fields.summary')
+              
+              echo "ID: ${id}"
+              echo "Summary: ${summary}"
+              echo "---"
+            done
+  
             for subtask in $(echo "${subtasks}" | jq -c '.[]'); do
               echo "${subtask}"
-              
+              echo "foo"
+            
+              subtask_key=$(echo "${subtask}" | jq -r '.key')
+              echo "${subtask_key}"
+              subtask_data=$(curl -s --request GET \
+              --url "${{ env.JIRA_URL }}/rest/api/3/issue/${subtask_key}" \
+              --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+              --header "Accept: application/json")
+              subtask_assignee=$(echo "${subtask_data}" | jq -r '.fields.assignee.accountId')
+              key=${reviewer}
+              reviewer_id=$(echo '${{ env.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
+              if [[ "${subtask_assignee}" == "${reviewer_id}" ]]; then
+                is_reviewer_assigned=true
+                echo "Subtask already created for reviewer: ${reviewer}."
+              fi
             done
             echo "foo=bar"
             if [[ "${is_reviewer_assigned}" == false ]]; then
