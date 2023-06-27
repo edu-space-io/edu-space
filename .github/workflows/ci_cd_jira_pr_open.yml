@@ -176,31 +176,30 @@ jobs:
           for reviewer in $(echo ${{ env.REVIEWERS }} | tr ',' '\n'); do
             parent_issue=$(curl -s --request GET \
             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ env.PARENT_ISSUE }}" \
-            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --user "${{ env.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
             --header "Accept: application/json")
             
             subtasks=$(echo "$parent_issue" | jq '.fields.subtasks')
             echo "subtasks=${subtasks}"
           
-            is_reviewer_assigned = False
-            for subtask in $(echo ${subtasks}); do
-              subtask_key = subtask['key']
-              subtask=$(curl -s --request GET \
+            is_reviewer_assigned=false
+            for subtask in $(echo "${subtasks}" | jq -c '.[]'); do
+              subtask_key=$(echo "${subtask}" | jq -r '.key')
+              subtask_data=$(curl -s --request GET \
               --url "${{ env.JIRA_URL }}/rest/api/3/issue/${subtask_key}" \
-              --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+              --user "${{ env.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
               --header "Accept: application/json")
-              subtask_data = subtask.json()
-              subtask_assignee = subtask_data['fields']['assignee']['accountId']
+              subtask_assignee=$(echo "${subtask_data}" | jq -r '.fields.assignee.accountId')
               key=${reviewer}
               reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
-              if subtask_assignee == reviewer_id:
-                is_reviewer_assigned = True
+              if [[ "${subtask_assignee}" == "${reviewer_id}" ]]; then
+                is_reviewer_assigned=true
                 echo "Subtask already created for reviewer: $reviewer."
               fi
             done
                 
             # If the reviewer is not assigned to any subtask, create a new subtask
-            if not is_reviewer_assigned:
+            if [[ "${is_reviewer_assigned}" == false ]]; then
               echo "Subtask not yet created for reviewer: $reviewer. Creating subtask for reviewer."
               key=${reviewer}
               reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
@@ -209,7 +208,7 @@ jobs:
               --url "${{ env.JIRA_URL }}/rest/api/3/issue/" \
               --header "Content-Type: application/json" \
               --header "Accept: application/json" \
-              --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+              --user "${{ env.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
               --data '{
                 "fields": {
                   "project": {
