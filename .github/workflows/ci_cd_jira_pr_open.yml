@@ -179,7 +179,7 @@ jobs:
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
             --header "Accept: application/json")
             
-            subtasks=$(echo '$parent_issue' | jq '.fields.subtasks')
+            subtasks=$(echo "${parent_issue}" | jq '.fields.subtasks')
           
             is_reviewer_assigned=false
             for subtask in $(echo "${subtasks}" | jq -c '.[]'); do
