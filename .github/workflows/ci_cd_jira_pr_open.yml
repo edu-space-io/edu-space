@@ -25,6 +25,7 @@ jobs:
       - name: Get PR details
         id: pr-details
         run: |
+          echo "github=${{ toJson(github) }}"
           echo "branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
           echo "title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
           echo "description=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
