@@ -107,7 +107,7 @@ jobs:
           cat jira-issue.json
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
           echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
-      
+
   add_reviewer:
     if: github.event.action == 'review_requested'
     runs-on: ubuntu-latest
@@ -208,7 +208,7 @@ jobs:
                   "issuetype": {
                     "name": "'"${{ env.SUB_ISSUE_TYPE }}"'"
                   },
-                  "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${PR_TITLE} - Reviewed by ${reviewer}"'",
+                  "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${{ github.event.pull_request.title }} - Reviewed by ${reviewer}"'",
                   "assignee": {
                     "accountId": "'"${reviewer_id}"'"
                   }
