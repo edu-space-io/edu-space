@@ -183,7 +183,7 @@ jobs:
             echo "subtasks=${subtasks}"
           
             is_reviewer_assigned=false
-            for subtask in $(echo "${subtasks}" | jq -c '.[]'); do
+            for subtask in $(echo "${subtasks}"); do
               echo "subtask=${subtask}" | jq -r '.summary'
               subtask_key=$(echo "${subtask}" | jq -r '.key')
               subtask_data=$(curl -s --request GET \
