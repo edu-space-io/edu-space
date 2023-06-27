@@ -144,7 +144,7 @@ jobs:
             SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
           done
   add_reviewer:
-    if: github.event.action == 'review_requested' && github.event_name != 'pull_request'
+    if: github.event.action == 'review_requested'
     runs-on: ubuntu-latest
     env:
       PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -152,6 +152,7 @@ jobs:
     steps:
       - name: Check if PR just created
         run: |
+          echo "github=${{ github }}"
           pr_created_at=$(jq -r '.pull_request.created_at' "$GITHUB_EVENT_PATH")
           current_time_seconds=$(date +%s)
           pr_created_at_seconds=$(date -d "$pr_created_at" +%s)
