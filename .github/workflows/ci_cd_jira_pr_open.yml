@@ -39,6 +39,8 @@ jobs:
           PR_NUMBER: ${{ steps.pr-details.outputs.number }}
           PR_TITLE: ${{ steps.pr-details.outputs.title }}
         run: |
+          foo=${{ github.event.pull_request.updated_at }}
+          echo "foo=${foo}"
           key=${{ env.ASSIGNEE }}
           echo "ASSIGNEE: ${ASSIGNEE}"
           assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ env.ASSIGNEE }}" '.[$key]')
@@ -140,7 +142,7 @@ jobs:
             SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
           done
   add_reviewer:
-    if: github.event.action == 'review_requested' && github.event.pull_request.created_at != github.event.pull_request.updated_at
+    if: github.event.action == 'review_requested' && github.event.pull_request.updated_at != null
     runs-on: ubuntu-latest
     env:
       PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -206,7 +208,6 @@ jobs:
               fi
             done
   
-            echo "foo=bar"
             if [[ "${is_reviewer_assigned}" == false ]]; then
               echo "Subtask not yet created for reviewer: ${reviewer}. Creating subtask for reviewer."
               key="${reviewer}"
