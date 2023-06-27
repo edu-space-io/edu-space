@@ -39,6 +39,7 @@ jobs:
           PR_NUMBER: ${{ steps.pr-details.outputs.number }}
           PR_TITLE: ${{ steps.pr-details.outputs.title }}
         run: |
+          foo=${{ github.event.pull_request.created_at }}
           foo=${{ github.event.pull_request.updated_at }}
           echo "foo=${foo}"
           key=${{ env.ASSIGNEE }}
