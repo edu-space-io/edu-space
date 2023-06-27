@@ -193,6 +193,7 @@ jobs:
               --url "${{ env.JIRA_URL }}/rest/api/3/issue/${subtask_key}" \
               --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
               --header "Accept: application/json")
+              echo "$subtask_data"
               subtask_assignee=$(echo "${subtask_data}" | jq -r '.fields.assignee.accountId')
               key=${reviewer}
               reviewer_id=$(echo '${{ env.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
