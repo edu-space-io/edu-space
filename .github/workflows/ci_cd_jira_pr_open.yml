@@ -40,8 +40,9 @@ jobs:
           PR_TITLE: ${{ steps.pr-details.outputs.title }}
         run: |
           foo=${{ github.event.pull_request.created_at }}
-          foo=${{ github.event.pull_request.updated_at }}
+          bar=${{ github.event.pull_request.updated_at }}
           echo "foo=${foo}"
+          echo "bar=${bar}"
           key=${{ env.ASSIGNEE }}
           echo "ASSIGNEE: ${ASSIGNEE}"
           assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ env.ASSIGNEE }}" '.[$key]')
