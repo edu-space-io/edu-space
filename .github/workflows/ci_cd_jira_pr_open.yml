@@ -152,7 +152,7 @@ jobs:
     steps:
       - name: Check if PR just created
         run: |
-          echo "github=${{ github }}"
+          echo "github=${{ toJson(github) }}"
           pr_created_at=$(jq -r '.pull_request.created_at' "$GITHUB_EVENT_PATH")
           current_time_seconds=$(date +%s)
           pr_created_at_seconds=$(date -d "$pr_created_at" +%s)
