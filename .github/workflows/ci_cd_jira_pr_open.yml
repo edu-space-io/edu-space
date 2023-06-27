@@ -196,7 +196,7 @@ jobs:
               subtask_assignee=$(echo "${subtask_data}" | jq -r '.fields.assignee.accountId')
               echo "subtask_assignee=${subtask_assignee}"
               key=${reviewer}
-              reviewer_id=$(echo '${{ env.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
+              reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
           
               echo "reviewer_id=${reviewer_id}"
               echo "subtask_assignee=${subtask_assignee}"
