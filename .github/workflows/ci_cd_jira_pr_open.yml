@@ -176,7 +176,7 @@ jobs:
           for reviewer in $(echo "${{ env.REVIEWERS }}" | tr ',' '\n'); do
             parent_issue=$(curl -s --request GET \
             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ env.PARENT_ISSUE }}" \
-            --user "${{ env.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
             --header "Accept: application/json")
             
             subtasks=$(echo "$parent_issue" | jq '.fields.subtasks')
@@ -186,11 +186,11 @@ jobs:
               subtask_key=$(echo "${subtask}" | jq -r '.key')
               subtask_data=$(curl -s --request GET \
               --url "${{ env.JIRA_URL }}/rest/api/3/issue/${subtask_key}" \
-              --user "${{ env.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+              --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
               --header "Accept: application/json")
               subtask_assignee=$(echo "${subtask_data}" | jq -r '.fields.assignee.accountId')
               key=${reviewer}
-              reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
+              reviewer_id=$(echo '${{ env.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
               if [[ "${subtask_assignee}" == "${reviewer_id}" ]]; then
                 is_reviewer_assigned=true
                 echo "Subtask already created for reviewer: ${reviewer}."
@@ -200,13 +200,13 @@ jobs:
             if [[ "${is_reviewer_assigned}" == false ]]; then
               echo "Subtask not yet created for reviewer: ${reviewer}. Creating subtask for reviewer."
               key=${reviewer}
-              reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
+              reviewer_id=$(echo '${{ env.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
               echo "Reviewer: ${reviewer_id}"
               curl -s -X POST \
               --url "${{ env.JIRA_URL }}/rest/api/3/issue/" \
               --header "Content-Type: application/json" \
               --header "Accept: application/json" \
-              --user "${{ env.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+              --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
               --data '{
                 "fields": {
                   "project": {
