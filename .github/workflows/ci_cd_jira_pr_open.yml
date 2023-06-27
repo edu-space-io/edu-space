@@ -184,7 +184,7 @@ jobs:
           
             is_reviewer_assigned=false
             for subtask in $(echo "${subtasks}" | jq -c '.[]'); do
-              echo "subtask=${subtask}" | jq -r '.fields.summary'
+              echo "subtask=${subtask}" | jq -r '.fields'
               subtask_key=$(echo "${subtask}" | jq -r '.key')
               subtask_data=$(curl -s --request GET \
               --url "${{ env.JIRA_URL }}/rest/api/3/issue/${subtask_key}" \
