@@ -189,18 +189,7 @@ jobs:
               }
               
               id=$(_jq '.id')
-              summary=$(_jq '.fields.summary')
-              
-              echo "ID: ${id}"
-              echo "Summary: ${summary}"
-              echo "---"
-            done
-  
-            for subtask in $(echo "${subtasks}" | jq -c '.[]'); do
-              echo "${subtask}"
-              echo "foo"
-            
-              subtask_key=$(echo "${subtask}" | jq -r '.key')
+              subtask_key=$(_jq '.key')
               echo "${subtask_key}"
               subtask_data=$(curl -s --request GET \
               --url "${{ env.JIRA_URL }}/rest/api/3/issue/${subtask_key}" \
@@ -214,6 +203,7 @@ jobs:
                 echo "Subtask already created for reviewer: ${reviewer}."
               fi
             done
+  
             echo "foo=bar"
             if [[ "${is_reviewer_assigned}" == false ]]; then
               echo "Subtask not yet created for reviewer: ${reviewer}. Creating subtask for reviewer."
