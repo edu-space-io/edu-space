@@ -150,6 +150,17 @@ jobs:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       REVIEWER_LOGIN: ${{ github.event.review.user.login }}
     steps:
+      - name: Check if PR just created
+        run: |
+          pr_created_at=$(jq -r '.pull_request.created_at' "$GITHUB_EVENT_PATH")
+          current_time_seconds=$(date +%s)
+          pr_created_at_seconds=$(date -d "$pr_created_at" +%s)
+          time_difference=$((current_time_seconds - pr_created_at_seconds))
+          echo "time_difference=${time_difference}"
+          if ((time_difference <= 2)); then 
+            echo "PR just created."
+            exit 1
+          fi
       - name: Checkout Repository
         uses: actions/checkout@v3
       - name: Get assignee ID and reviewers logins
@@ -175,17 +186,6 @@ jobs:
           PARENT_ISSUE: ${{ steps.search.outputs.issue }}
           REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
         run: |
-          current_time=$(date +%s)
-          pr_created_at=$(jq -r '.pull_request.created_at' "$GITHUB_EVENT_PATH")
-          current_time_seconds=$(date -d "$current_time" +%s)
-          pr_created_at_seconds=$(date -d "$pr_created_at" +%s)
-          time_difference=$((current_time_seconds - pr_created_at_seconds))
-          echo "time_difference=${time_difference}"
-          if ((time_difference <= 2)); then 
-            echo "PR just created."
-            exit 1
-          fi
-          
           echo "issue=${{ env.PARENT_ISSUE }}"
           for reviewer in $(echo "${{ env.REVIEWERS }}" | tr ',' '\n'); do
             echo "reviewer=${reviewer}"
