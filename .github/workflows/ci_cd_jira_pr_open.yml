@@ -148,14 +148,13 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-      - name: Get assignee ID
+      - name: Get assignee ID and reviewers logins
         id: pr-details
         run: |
           key=${{ github.event.pull_request.assignee.login }}
           assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.assignee.login }}" '.[$key]')
           echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
-          echo "reviewers=${reviewers}"
       - name: Search
         id: search
         uses: tomhjp/gh-action-jira-search@v0.2.2
@@ -174,6 +173,7 @@ jobs:
         run: |
           echo "issue=${{ env.PARENT_ISSUE }}"
           for reviewer in $(echo "${{ env.REVIEWERS }}" | tr ',' '\n'); do
+            echo "reviewer=${reviewer}"
             parent_issue=$(curl -s --request GET \
             --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ env.PARENT_ISSUE }}" \
             --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
@@ -193,11 +193,11 @@ jobs:
               --url "${{ env.JIRA_URL }}/rest/api/3/issue/${subtask_key}" \
               --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
               --header "Accept: application/json")
-              echo "$subtask_data"
               subtask_assignee=$(echo "${subtask_data}" | jq -r '.fields.assignee.accountId')
               echo "subtask_assignee=${subtask_assignee}"
               key=${reviewer}
               reviewer_id=$(echo '${{ env.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
+          
               echo "reviewer_id=${reviewer_id}"
               echo "subtask_assignee=${subtask_assignee}"
               if [[ "${subtask_assignee}" == "${reviewer_id}" ]]; then
