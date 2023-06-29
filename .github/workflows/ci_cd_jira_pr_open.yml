@@ -7,6 +7,14 @@ on:
   pull_request_review:
     types:
       - submitted
+env:
+  JIRA_URL: ${{ secrets.JIRA_URL }}
+  PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+  ISSUE_TYPE: ${{ secrets.JIRA_ISSUE_TYPE }}
+  SUB_ISSUE_TYPE: ${{ secrets.JIRA_SUB_ISSUE_TYPE }}
+  JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+  JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+  JIRA_AUTH: "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}"
 jobs:
   create_jira_issue:
     if: github.event_name == 'pull_request' && github.event.action == 'opened'
