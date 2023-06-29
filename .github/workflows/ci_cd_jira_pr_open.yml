@@ -118,11 +118,9 @@ jobs:
           if [ "${assignee_login}" != '' ]
           then
             assignee_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.assignee.login }}" '.[$assignee]') >> $GITHUB_ENV  
-            JQL='project = "${{ env.EV_JIRA_PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.assignee_id }}"' >> $GITHUB_ENV
           elif [ "${creator_login}" != '' ]
           then
             creator_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.user.login }}" '.[$creator]') >> $GITHUB_ENV
-            JQL='project = "${{ env.EV_JIRA_PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND creator = "${{ env.creator_id }}"' >> $GITHUB_ENV
           fi
           echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
@@ -134,7 +132,7 @@ jobs:
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         with:
-          jql: '${{ env.JQL }}'
+          jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND (assignee = "${{ env.assignee_id }}" OR creator = "${{ env.creator_id }})'
       - name: Log
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
       - name: Create reviewer subtask
