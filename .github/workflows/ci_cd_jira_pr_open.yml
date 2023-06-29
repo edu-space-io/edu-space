@@ -131,6 +131,7 @@ jobs:
             creator_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.user.login }}" '.[$key]') >> $GITHUB_ENV
           fi
           echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
+          echo "creator_id=${creator_id}" >> $GITHUB_ENV
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
       - name: Search
         id: search
