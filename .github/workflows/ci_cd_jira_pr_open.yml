@@ -115,11 +115,11 @@ jobs:
           creator=${{ github.event.pull_request.user.login }}
           assignee_id=null
           creator_id=null
-          if [ "${assignee}" != '' ]
-          then
+          if [ "$assignee" != "" ]; then
             assignee_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.assignee.login }}" '.[$assignee]') >> $GITHUB_ENV  
-          elif [ "${creator}" != '' ]
-          then
+          fi
+          
+          if [ "$creator" != "" ]; then
             creator_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.user.login }}" '.[$creator]') >> $GITHUB_ENV
           fi
           echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
