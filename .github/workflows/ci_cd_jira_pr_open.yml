@@ -116,6 +116,13 @@
       steps:
         - name: Checkout Repository
           uses: actions/checkout@v3
+        - name: Get assignee ID and reviewers logins
+          id: pr-details
+          run: |
+            key=${{ github.event.pull_request.assignee.login }}
+            assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.user.login }}" '.[$key]')
+            echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
+            echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
         - name: Search
           id: search
           uses: tomhjp/gh-action-jira-search@v0.2.2
@@ -124,15 +131,16 @@
             JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
             JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           with:
-            jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND NOT text ~ "Reviewed by "'
+            jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.creator_id }}"'
         - name: Log
           run: echo "Found issue ${{ steps.search.outputs.issue }}"
         - name: Create reviewer subtask
           env:
             PARENT_ISSUE_ID: ${{ steps.search.outputs.issue }}
+            REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
           run: |
             echo "issue_id=${{ env.PARENT_ISSUE_ID }}"
-            for reviewer in $(echo "${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" | tr ',' '\n'); do
+            for reviewer in $(echo "${{ env.REVIEWERS }}" | tr ',' '\n'); do
               echo "reviewer=${reviewer}"
               parent_issue=$(curl -s --request GET \
               --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ env.PARENT_ISSUE_ID }}" \
@@ -201,6 +209,14 @@
         REVIEWER_LOGIN: ${{ github.event.review.user.login }}
         ASSIGNEE_LOGIN: ${{ github.event.pull_request.user.login }}
       steps:
+        - name: Get reviewer ID
+          id: get-reviewer-id
+          run: |
+            assignee_login=${{ github.event.pull_request.assignee.login }}
+            creator_login=${{ github.event.pull_request.user.login }}
+            assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${assignee_login}" '.[$assignee_login]') >> $GITHUB_ENV
+            creator_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${creator_login}" '.[$creator_login]') >> $GITHUB_ENV
+            echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
         - name: Search
           id: search
           uses: tomhjp/gh-action-jira-search@v0.2.2
@@ -209,7 +225,7 @@
             JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
             JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           with:
-            jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} ""'
+            jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.reviewer_id }}"'
         - name: Log
           run: echo "Found issue ${{ steps.search.outputs.issue }}"
         - name: Get Transition ID
