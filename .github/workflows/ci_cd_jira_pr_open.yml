@@ -147,6 +147,7 @@ jobs:
       - name: Get assignee ID and reviewers logins
         id: pr-details
         run: |
+          echo "github=${{ github.event.pull_request }}"
           login=${{ github.event.pull_request.assignee.login || github.event.pull_request.user.login }}
           assignee_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${login}" '.[$login]')
           echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
