@@ -111,17 +111,17 @@ jobs:
       - name: Get assignee ID and reviewers logins
         id: pr-details
         run: |
-          assignee_login=${{ github.event.pull_request.assignee.login }}
-          creator_login=${{ github.event.pull_request.user.login }}
+          assignee=${{ github.event.pull_request.assignee.login }}
+          creator=${{ github.event.pull_request.user.login }}
           assignee_id=null
           creator_id=null
           if [ "${assignee_login}" != '' ]
           then
-            assignee_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.assignee.login }}" '.[${assignee_login}]') >> $GITHUB_ENV  
+            assignee_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.assignee.login }}" '.[$assignee]') >> $GITHUB_ENV  
             JQL='project = "${{ env.EV_JIRA_PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.assignee_id }}"' >> $GITHUB_ENV
           elif [ "${creator_login}" != '' ]
           then
-            creator_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.user.login }}" '.[${creator_login]') >> $GITHUB_ENV
+            creator_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.user.login }}" '.[$creator]') >> $GITHUB_ENV
             JQL='project = "${{ env.EV_JIRA_PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.creator_id }}"' >> $GITHUB_ENV
           fi
           echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
