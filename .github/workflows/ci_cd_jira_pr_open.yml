@@ -130,10 +130,9 @@
         - name: Create reviewer subtask
           env:
             PARENT_ISSUE_ID: ${{ steps.search.outputs.issue }}
-            REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
           run: |
             echo "issue_id=${{ env.PARENT_ISSUE_ID }}"
-            for reviewer in $(echo "${{ env.REVIEWERS }}" | tr ',' '\n'); do
+            for reviewer in $(echo "${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" | tr ',' '\n'); do
               echo "reviewer=${reviewer}"
               parent_issue=$(curl -s --request GET \
               --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ env.PARENT_ISSUE_ID }}" \
