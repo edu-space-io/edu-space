@@ -149,8 +149,8 @@ jobs:
         run: |
           assignee_login=${{ github.event.pull_request.assignee.login }}
           creator_login=${{ github.event.pull_request.user.login }}
-          assignee_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${assignee_login}" '.[$assignee_login]')
-          creator_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${creator_login}" '.[$creator_login]')
+          assignee_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${assignee_login}" '.[$assignee_login]') >> $GITHUB_ENV
+          creator_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${creator_login}" '.[$creator_login]') >> $GITHUB_ENV
           echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
       - name: Search
@@ -258,13 +258,9 @@ jobs:
         run: |
           assignee_login=${{ github.event.pull_request.assignee.login }}
           creator_login=${{ github.event.pull_request.user.login }}
-          assignee_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${assignee_login}" '.[$assignee_login]')
-          creator_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${creator_login}" '.[$creator_login]')
-          key=${{ github.event.review.user.login }}
+          assignee_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${assignee_login}" '.[$assignee_login]') >> $GITHUB_ENV
+          creator_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${creator_login}" '.[$creator_login]') >> $GITHUB_ENV
           echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
-          reviewer_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.review.user.login }}" '.[$key]')
-          echo "reviewer_id=${reviewer_id}" >> $GITHUB_ENV
-          echo "reviewer_id=${reviewer_id}"
       - name: Search
         id: search
         uses: tomhjp/gh-action-jira-search@v0.2.2
@@ -273,7 +269,7 @@ jobs:
           JIRA_USER_EMAIL: ${{ env.EV_JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ env.EV_JIRA_API_TOKEN }}
         with:
-          jql: 'project = "${{ env.EV_JIRA_PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND (assignee = "${{ env.assignee_id }} OR creator = "${{ env.creator_id }})"'
+          jql: 'project = "${{ env.EV_JIRA_PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.reviewer_id }}"'
       - name: Log
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
       - name: Get Transition ID
