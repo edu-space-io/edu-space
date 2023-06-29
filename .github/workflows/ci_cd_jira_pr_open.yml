@@ -113,13 +113,13 @@ jobs:
         run: |
           assignee_id=null
           creator_id=null
-          key=${{ github.event.pull_request.assignee.login }}
           if [ "$assignee" != "" ]; then
+            key=${{ github.event.pull_request.assignee.login }}
             assignee_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.assignee.login }}" '.[$key]') >> $GITHUB_ENV  
           fi
           
-          key=${{ github.event.pull_request.user.login }}
           if [ "$creator" != "" ]; then
+            key=${{ github.event.pull_request.user.login }}
             creator_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.user.login }}" '.[$key]') >> $GITHUB_ENV
           fi
           echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
