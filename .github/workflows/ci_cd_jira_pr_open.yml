@@ -116,18 +116,6 @@
       steps:
         - name: Checkout Repository
           uses: actions/checkout@v3
-        - name: Get assignee ID and reviewers logins
-          id: pr-details
-          run: |
-            assignee_id=?
-            creator_id=?
-            key=${{ github.event.pull_request.assignee.login }}
-            assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.assignee.login }}" '.[$key]')
-            key=${{ github.event.pull_request.user.login }}
-            creator_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.user.login }}" '.[$key]')
-            echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
-            echo "creator_id=${creator_id}" >> $GITHUB_ENV
-            echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
         - name: Search
           id: search
           uses: tomhjp/gh-action-jira-search@v0.2.2
@@ -214,14 +202,6 @@
         REVIEWER_LOGIN: ${{ github.event.review.user.login }}
         ASSIGNEE_LOGIN: ${{ github.event.pull_request.user.login }}
       steps:
-        - name: Get reviewer ID
-          id: get-reviewer-id
-          run: |
-            assignee_login=${{ github.event.pull_request.assignee.login }}
-            creator_login=${{ github.event.pull_request.user.login }}
-            assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${assignee_login}" '.[$assignee_login]') >> $GITHUB_ENV
-            creator_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${creator_login}" '.[$creator_login]') >> $GITHUB_ENV
-            echo "assignee=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
         - name: Search
           id: search
           uses: tomhjp/gh-action-jira-search@v0.2.2
@@ -230,7 +210,7 @@
             JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
             JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           with:
-            jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.reviewer_id }}"'
+            jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} ""'
         - name: Log
           run: echo "Found issue ${{ steps.search.outputs.issue }}"
         - name: Get Transition ID
