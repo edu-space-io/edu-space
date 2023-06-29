@@ -124,7 +124,7 @@
             JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
             JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           with:
-            jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND text !~ "Reviewed by"'
+            jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND NOT text ~ "Reviewed by "'
         - name: Log
           run: echo "Found issue ${{ steps.search.outputs.issue }}"
         - name: Create reviewer subtask
