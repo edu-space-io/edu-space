@@ -127,13 +127,13 @@ jobs:
         uses: actions/checkout@v3
       - name: Save GitHub Context
         run: |
-          echo "${{ toJson(github) }}" > ./github-context.json
-          cat github-context.json
+          echo "${{ toJson(github) }}" > ./github-context2.json
+          cat github-context2.json
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: data-json-artifact
-          path: ./github-context.json
+          path: ./github-context2.json
       - name: Get assignee ID and reviewers logins
         id: pr-details
         run: |
