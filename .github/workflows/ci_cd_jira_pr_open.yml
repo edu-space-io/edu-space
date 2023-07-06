@@ -17,9 +17,14 @@ env:
   JIRA_AUTH: "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}"
 jobs:
   create_jira_issue:
-    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
+      - name: Check
+        run: |
+          if [[ {{github.event.action != 'opened'}} ]]; then
+            exit 0
+          fi
       - name: Checkout Repository
         uses: actions/checkout@v3
       - name: Save GitHub Context
