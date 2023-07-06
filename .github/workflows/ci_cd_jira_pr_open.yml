@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Save GitHub Context
         run: |
-          echo "${{ toJson(github) }}" | jq . > ./github-context.json
+          echo "${{ toJson(github) }}" > ./github-context.json
           cat github-context.json
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -127,7 +127,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Save GitHub Context
         run: |
-          echo "${{ toJson(github) }}" | jq . > ./github-context2.json
+          echo "${{ toJson(github) }}" > ./github-context2.json
           cat github-context2.json
       - name: Upload artifact
         uses: actions/upload-artifact@v3
