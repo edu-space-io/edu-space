@@ -17,25 +17,26 @@ env:
   JIRA_AUTH: "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}"
 jobs:
   create_jira_issue:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
-      - name: Check
-        run: |
-          if [ ${{ github.event.action != 'opened' }} ]; then
-            exit 0
-          fi
       - name: Checkout Repository
         uses: actions/checkout@v3
       - name: Save GitHub Context
         run: |
           echo "${{ toJson(github) }}" > ./github-context.json
+          echo "foo" > ./create_jira_issue.txt
           cat github-context.json
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: data-json-artifact
           path: ./github-context.json
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: create_jira_issue
+          path: ./create_jira_issue.txt
       - name: Get PR details
         id: pr-details
         run: |
@@ -123,13 +124,17 @@ jobs:
 
   add_reviewer:
     needs: create_jira_issue
-    if: ${{ needs.create_jira_issue.result != 'success' }} && github.event.action == 'review_requested'
+    if:  github.event.action == 'review_requested'
     runs-on: ubuntu-latest
     env:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       REVIEWER_LOGIN: ${{ github.event.review.user.login }}
       ASSIGNEE_LOGIN: ${{ github.event.pull_request.user.login }}
     steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ./create_jira_issue.txt
       - name: Checkout Repository
         uses: actions/checkout@v3
       - name: Save GitHub Context
@@ -158,9 +163,14 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         with:
           jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.assignee_id }}"'
+      - name: Check Artifact
+        id: check_artifact
+        run: |
+          echo "artifact_exists=$(if [ -f ./create_jira_issue.txt ]; then echo 'true'; else echo 'false'; fi)" >> $GITHUB_OUTPUT
       - name: Log
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
       - name: Create reviewer subtask
+        if: ${{ steps.check_artifact.outputs.artifact_exists != 'true' }}
         env:
           PARENT_ISSUE_ID: ${{ steps.search.outputs.issue }}
           REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
