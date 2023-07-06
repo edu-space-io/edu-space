@@ -118,7 +118,7 @@ jobs:
 
   add_reviewer:
     needs: create_jira_issue
-    if: ${{ needs.create_jira_issue.outputs.was_triggered != 'true' }} && github.event.action == 'review_requested'
+    if: $${{ needs.create_jira_issue.result != 'success' }} && github.event.action == 'review_requested'
     runs-on: ubuntu-latest
     env:
       PR_NUMBER: ${{ github.event.pull_request.number }}
