@@ -21,7 +21,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Save GitHub Context
-        run: echo "${{ toJson(github) }}"
+        run: |
+          echo "${{ toJson(github) }}" > github-context.json
+          cat github-context.json
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: data-json-artifact
+          path: data.json
       - name: Checkout Repository
         uses: actions/checkout@v3
       - name: Get PR details
@@ -117,7 +124,14 @@ jobs:
       ASSIGNEE_LOGIN: ${{ github.event.pull_request.user.login }}
     steps:
       - name: Save GitHub Context
-        run: echo "${{ toJson(github) }}"
+        run: |
+          echo "${{ toJson(github) }}" > github-context.json
+          cat github-context.json
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: data-json-artifact
+          path: data.json
       - name: Checkout Repository
         uses: actions/checkout@v3
       - name: Get assignee ID and reviewers logins
