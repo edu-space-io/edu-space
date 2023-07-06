@@ -170,7 +170,6 @@ jobs:
       - name: Log
         run: echo "Found issue ${{ steps.search.outputs.issue }}"
       - name: Create reviewer subtask
-        if: ${{ steps.check_artifact.outputs.artifact_exists != 'true' }}
         env:
           PARENT_ISSUE_ID: ${{ steps.search.outputs.issue }}
           REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
