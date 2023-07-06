@@ -123,6 +123,7 @@ jobs:
           echo "was_triggered=true" >> $GITHUB_OUTPUT
 
   add_reviewer:
+    needs: create_jira_issue
     if:  github.event.action == 'review_requested'
     runs-on: ubuntu-latest
     env:
