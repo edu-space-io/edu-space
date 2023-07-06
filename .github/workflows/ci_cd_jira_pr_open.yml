@@ -114,9 +114,11 @@ jobs:
           cat jira-issue.json
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
           echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
+          echo "was_triggered=true" >> $GITHUB_OUTPUT
 
   add_reviewer:
-    if: github.event.action != 'opened' && github.event.action == 'review_requested'
+    needs: create_jira_issue
+    if: ${{ needs.create_jira_issue.outputs.was_triggered != 'true' }} && github.event.action == 'review_requested'
     runs-on: ubuntu-latest
     env:
       PR_NUMBER: ${{ github.event.pull_request.number }}
