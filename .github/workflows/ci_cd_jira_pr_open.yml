@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Check
         run: |
-          if [[ ${{github.event.action != 'opened'}} ]]; then
+          if [[ ${{ github.event.action != 'opened' }} ]]; then
             exit 0
           fi
       - name: Checkout Repository
