@@ -20,17 +20,17 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
       - name: Save GitHub Context
         run: |
           echo "${{ toJson(github) }}" > github-context.json
           cat github-context.json
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: data-json-artifact
-          path: data.json
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+          path: ./data.json
       - name: Get PR details
         id: pr-details
         run: |
@@ -123,17 +123,17 @@ jobs:
       REVIEWER_LOGIN: ${{ github.event.review.user.login }}
       ASSIGNEE_LOGIN: ${{ github.event.pull_request.user.login }}
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
       - name: Save GitHub Context
         run: |
           echo "${{ toJson(github) }}" > github-context.json
           cat github-context.json
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: data-json-artifact
-          path: data.json
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+          path: ./data.json
       - name: Get assignee ID and reviewers logins
         id: pr-details
         run: |
