@@ -151,8 +151,8 @@ jobs:
           assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.user.login }}" '.[$key]')
           echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
-          TEAM_NAMES=$(echo "${{ github.event.pull_request.requested_teams }}" | jq -r '.[].slug')
-          echo "teams=${TEAM_NAMES}"
+          echo "teams=${{ join(github.event.pull_request.requested_teams, ',') }}"
+          echo "teams=${teams}"
       - name: Search
         id: search
         uses: tomhjp/gh-action-jira-search@v0.2.2
