@@ -124,23 +124,12 @@ jobs:
 
   add_reviewer:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' && github.event.action != 'opened' }}
+    if: ${{ github.event_name == 'pull_request' && steps.get_pr_info.outputs.created_at != steps.get_current_time.outputs.current_time }}
     steps:
-      - name: Check if Extra Reviewers Were Added
-        id: check_reviewers
+      - name: Get PR Info
+        id: get_pr_info
         run: |
-          PR_NUMBER=$(echo "${{ github.event.pull_request.url }}" | awk -F'/' '{print $NF}')
-          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                      "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}")
-          REVIEWERS_COUNT=$(echo "$RESPONSE" | jq '.requested_reviewers | length')
-          echo "::set-output name=reviewers_added::$(if [[ $REVIEWERS_COUNT -gt 0 ]]; then echo 'true'; else echo 'false'; fi)"
-      - name: Add Extra Reviewers
-        if: ${{ steps.check_reviewers.outputs.reviewers_added == 'true' }}
-        run: |
-          # Your logic to add extra reviewers here
-          # Example:
-          echo "${{ steps.check_reviewers.outputs.reviewers_added }}"
-          echo "Adding extra reviewers..."
+         echo "foo"
   approve_received:
     if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
     runs-on: ubuntu-latest
@@ -151,7 +140,7 @@ jobs:
     steps:
       - name: Get reviewer ID
         id: get-reviewer-id
-        run: |
+        run: |  
           assignee_login=${{ github.event.pull_request.assignee.login }}
           creator_login=${{ github.event.pull_request.user.login }}
           assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${assignee_login}" '.[$assignee_login]') >> $GITHUB_ENV
