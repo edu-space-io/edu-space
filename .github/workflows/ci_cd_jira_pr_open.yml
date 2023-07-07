@@ -121,15 +121,118 @@ jobs:
           assignee_issue_key=$(cat jira-issue.json | jq -r '.key')
           echo "assignee-issue-key=${assignee_issue_key}" >> $GITHUB_OUTPUT
           echo "was_triggered=true" >> $GITHUB_OUTPUT
-
   add_reviewer:
+    concurrency:
+      group: add_reviewer
+      cancel-in-progress: true
+    if: github.event.action == 'review_requested'
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' && steps.get_pr_info.outputs.created_at != steps.get_current_time.outputs.current_time }}
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      REVIEWER_LOGIN: ${{ github.event.review.user.login }}
+      ASSIGNEE_LOGIN: ${{ github.event.pull_request.user.login }}
     steps:
-      - name: Get PR Info
-        id: get_pr_info
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Save GitHub Context
         run: |
-         echo "foo"
+          echo "needs=${{ toJson(needs.create_jira_issue) }}"
+          echo "${{ toJson(github) }}" > ./github-context2.json
+          cat github-context2.json
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: data-json-artifact
+          path: ./github-context2.json
+      - name: Get assignee ID and reviewers logins
+        id: pr-details
+        run: |
+          key=${{ github.event.pull_request.user.login }}
+          assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.user.login }}" '.[$key]')
+          echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
+          echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
+      - name: Search
+        id: search
+        uses: tomhjp/gh-action-jira-search@v0.2.2
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        with:
+          jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.assignee_id }}"'
+      - name: Check Artifact
+        id: check_artifact
+        run: |
+          echo "artifact_exists=$(if [ -f ./create_jira_issue.txt ]; then echo 'true'; else echo 'false'; fi)" >> $GITHUB_OUTPUT
+      - name: Log
+        run: echo "Found issue ${{ steps.search.outputs.issue }}"
+      - name: Create reviewer subtask
+        env:
+          PARENT_ISSUE_ID: ${{ steps.search.outputs.issue }}
+          REVIEWERS: ${{ steps.pr-details.outputs.reviewers }}
+        run: |
+          echo "issue_id=${{ env.PARENT_ISSUE_ID }}"
+          for reviewer in $(echo "${{ env.REVIEWERS }}" | tr ',' '\n'); do
+            echo "reviewer=${reviewer}"
+            parent_issue=$(curl -s --request GET \
+            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ env.PARENT_ISSUE_ID }}" \
+            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --header "Accept: application/json")
+          
+            subtasks=$(echo "${parent_issue}" | jq -r '.fields.subtasks')
+            is_reviewer_assigned=false
+            for subtask in $(echo "${subtasks}" | jq -r '.[] | @base64'); do
+              _jq() {
+                echo "${subtask}" | base64 --decode | jq -r "${1}"
+              }
+              subtask_key=$(_jq '.key')
+              subtask_data=$(curl -s --request GET \
+              --url "${{ env.JIRA_URL }}/rest/api/3/issue/${subtask_key}" \
+              --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+              --header "Accept: application/json")
+              subtask_assignee=$(echo "${subtask_data}" | jq -r '.fields.assignee.accountId')
+              key=${reviewer}
+              reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
+          
+              echo "reviewer_id=${reviewer_id}"
+              echo "subtask_assignee=${subtask_assignee}"
+              if [[ "${subtask_assignee}" == "${reviewer_id}" ]]; then
+                is_reviewer_assigned=true
+                echo "Subtask already created for reviewer: ${reviewer}."
+              fi
+            done
+          
+            if [[ "${is_reviewer_assigned}" == false ]]; then
+              echo "Subtask not yet created for reviewer: ${reviewer}. Creating subtask for reviewer."
+              key="${reviewer}"
+              reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
+              echo "Reviewer: ${reviewer_id}"
+              curl -s -X POST \
+              --url "${{ env.JIRA_URL }}/rest/api/3/issue/" \
+              --header "Content-Type: application/json" \
+              --header "Accept: application/json" \
+              --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+              --data '{
+                "fields": {
+                  "project": {
+                    "key": "'"${{ env.PROJECT_KEY }}"'"
+                  },
+                  "parent": {
+                    "key": "'"${{ env.PARENT_ISSUE_ID }}"'"
+                  },
+                  "issuetype": {
+                    "name": "'"${{ env.SUB_ISSUE_TYPE }}"'"
+                  },
+                  "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${{ github.event.pull_request.title }} - Reviewed by ${reviewer}"'",
+                  "assignee": {
+                    "accountId": "'"${reviewer_id}"'"
+                  }
+                }
+              }' > jira-subtask.json
+              cat jira-subtask.json
+              SUBTASK_KEY=$(cat jira-subtask.json | jq -r '.key')
+            fi
+          done
   approve_received:
     if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
     runs-on: ubuntu-latest
