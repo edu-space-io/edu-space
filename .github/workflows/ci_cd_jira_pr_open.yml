@@ -151,10 +151,6 @@ jobs:
           assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.user.login }}" '.[$key]')
           echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
-          TEAM_NAMES=$(echo "${{ github.event.pull_request.requested_teams }}" | jq -r '.[].slug')
-          IFS=$'\n' TEAM_ARRAY=($TEAM_NAMES)
-          TEAM_STRING=$(IFS=,; echo "${TEAM_ARRAY[*]}")
-          echo "teams=${TEAM_STRING}" >> $GITHUB_ENV
           echo "teams=${{ github.event.pull_request.requested_teams }}"
       - name: Search
         id: search
