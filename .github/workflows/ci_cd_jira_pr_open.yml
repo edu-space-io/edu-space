@@ -156,7 +156,7 @@ jobs:
             --header "Content-Type: application/json" \
             --header "Accept: application/json" \
             --data '{
-              "'"${{ github.event.pull_request.requested_reviewers.*.login }}"'"
+              "foo": "'"${{ toJson(github.event.pull_request.requested_reviewers.*.login) }}"'"
             }'
           TEAM_SLUGS=$(echo "${{ github.event.pull_request.requested_teams }}" | jq -r '.[].slug')
           TEAM_MEMBERS=""
