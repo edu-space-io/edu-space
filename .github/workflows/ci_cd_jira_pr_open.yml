@@ -13,8 +13,8 @@ env:
   ISSUE_TYPE: ${{ secrets.JIRA_ISSUE_TYPE }}
   SUB_ISSUE_TYPE: ${{ secrets.JIRA_SUB_ISSUE_TYPE }}
   JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-  JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-  JIRA_AUTH: "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}"
+  EV_JIRA_API_TOKEN: ${{ secrets.EV_JIRA_API_TOKEN }}
+  JIRA_AUTH: "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.EV_JIRA_API_TOKEN }}"
 jobs:
   create_jira_issue:
     if: github.event_name == 'pull_request' && github.event.action == 'opened'
@@ -63,8 +63,8 @@ jobs:
           echo "DESCRIPTION: ${{ env.DESCRIPTION }}"
           #Find all fields
           curl -s --request GET \
-          --url "${{ env.JIRA_URL }}/rest/api/3/field" \
-          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+          --url "${{ env.EV_JIRA_URL }}/rest/api/3/field" \
+          --user "${{ env.EV_JIRA_USER_EMAIL }}:${{ env.EV_JIRA_API_TOKEN }}" \
           --header "Content-Type: application/json" > all_fields.json
           git fetch origin master
           lines_changed=$(git diff --shortstat origin/master HEAD | awk '{print $1 + $4}')
@@ -80,17 +80,17 @@ jobs:
           echo "lines_changed_field_id = ${lines_changed_field_id}"
           description=$(echo "${{ env.DESCRIPTION }}" | jq -sR '.')
           curl -s -X POST \
-          --url "${{ env.JIRA_URL }}/rest/api/3/issue/" \
+          --url "${{ env.EV_JIRA_URL }}/rest/api/3/issue/" \
           --header "Content-Type: application/json" \
           --header "Accept: application/json" \
-          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+          --user "${{ env.EV_JIRA_USER_EMAIL }}:${{ env.EV_JIRA_API_TOKEN }}" \
           --data '{
             "fields": {
               "project": {
-                "key": "'"${{ env.PROJECT_KEY }}"'"
+                "key": "'"${{ env.EV_JIRA_PROJECT_KEY }}"'"
               },
               "issuetype": {
-                "name": "'"${{ env.ISSUE_TYPE }}"'"
+                "name": "'"${{ env.EV_JIRA_ISSUE_TYPE }}"'"
               },
               "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${PR_TITLE}"'",
               "description": {
@@ -151,6 +151,13 @@ jobs:
           assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.user.login }}" '.[$key]')
           echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
           echo "reviewers=${{ join(github.event.pull_request.requested_reviewers.*.login, ',') }}" >> $GITHUB_OUTPUT
+          curl -s -X POST \
+            --url "http://127.0.0.1:8000/metrics/pr-created" \
+            --header "Content-Type: application/json" \
+            --header "Accept: application/json" \
+            --data '{
+              "'"${{ github.event.pull_request.requested_reviewers.*.login }}"'"
+            }'
           TEAM_SLUGS=$(echo "${{ github.event.pull_request.requested_teams }}" | jq -r '.[].slug')
           TEAM_MEMBERS=""
           for slug in $TEAM_SLUGS; do
@@ -166,7 +173,7 @@ jobs:
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          EV_JIRA_API_TOKEN: ${{ secrets.EV_JIRA_API_TOKEN }}
         with:
           jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.assignee_id }}"'
       - name: Check Artifact
@@ -184,8 +191,8 @@ jobs:
           for reviewer in $(echo "${{ env.REVIEWERS }}" | tr ',' '\n'); do
             echo "reviewer=${reviewer}"
             parent_issue=$(curl -s --request GET \
-            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ env.PARENT_ISSUE_ID }}" \
-            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --url "${{ env.EV_JIRA_URL }}/rest/api/3/issue/${{ env.PARENT_ISSUE_ID }}" \
+            --user "${{ env.EV_JIRA_USER_EMAIL }}:${{ env.EV_JIRA_API_TOKEN }}" \
             --header "Accept: application/json")
           
             subtasks=$(echo "${parent_issue}" | jq -r '.fields.subtasks')
@@ -196,12 +203,12 @@ jobs:
               }
               subtask_key=$(_jq '.key')
               subtask_data=$(curl -s --request GET \
-              --url "${{ env.JIRA_URL }}/rest/api/3/issue/${subtask_key}" \
-              --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+              --url "${{ env.EV_JIRA_URL }}/rest/api/3/issue/${subtask_key}" \
+              --user "${{ env.EV_JIRA_USER_EMAIL }}:${{ env.EV_JIRA_API_TOKEN }}" \
               --header "Accept: application/json")
               subtask_assignee=$(echo "${subtask_data}" | jq -r '.fields.assignee.accountId')
               key=${reviewer}
-              reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
+              reviewer_id=$(echo '${{ secrets.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
           
               echo "reviewer_id=${reviewer_id}"
               echo "subtask_assignee=${subtask_assignee}"
@@ -214,23 +221,23 @@ jobs:
             if [[ "${is_reviewer_assigned}" == false ]]; then
               echo "Subtask not yet created for reviewer: ${reviewer}. Creating subtask for reviewer."
               key="${reviewer}"
-              reviewer_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
+              reviewer_id=$(echo '${{ env.EV_JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${reviewer}" '.[$key]')
               echo "Reviewer: ${reviewer_id}"
               curl -s -X POST \
-              --url "${{ env.JIRA_URL }}/rest/api/3/issue/" \
+              --url "${{ env.EV_JIRA_URL }}/rest/api/3/issue/" \
               --header "Content-Type: application/json" \
               --header "Accept: application/json" \
-              --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+              --user "${{ env.EV_JIRA_USER_EMAIL }}:${{ env.EV_JIRA_API_TOKEN }}" \
               --data '{
                 "fields": {
                   "project": {
-                    "key": "'"${{ env.PROJECT_KEY }}"'"
+                    "key": "'"${{ env.EV_JIRA_PROJECT_KEY }}"'"
                   },
                   "parent": {
                     "key": "'"${{ env.PARENT_ISSUE_ID }}"'"
                   },
                   "issuetype": {
-                    "name": "'"${{ env.SUB_ISSUE_TYPE }}"'"
+                    "name": "'"${{ env.EV_JIRA_SUB_ISSUE_TYPE }}"'"
                   },
                   "summary": "'"${GITHUB_REPOSITORY#${GITHUB_OWNER}}#${PR_NUMBER} - ${{ github.event.pull_request.title }} - Reviewed by ${reviewer}"'",
                   "assignee": {
@@ -264,7 +271,7 @@ jobs:
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          EV_JIRA_API_TOKEN: ${{ secrets.EV_JIRA_API_TOKEN }}
         with:
           jql: 'project = "${{ env.PROJECT_KEY }}" AND text ~ "#${{ env.PR_NUMBER }} " AND assignee = "${{ env.reviewer_id }}"'
       - name: Log
@@ -273,8 +280,8 @@ jobs:
         id: get-transition-id
         run: |
           curl --request GET \
-            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}/transitions" \
-            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --url "${{ env.EV_JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}/transitions" \
+            --user "${{ env.EV_JIRA_USER_EMAIL }}:${{ env.EV_JIRA_API_TOKEN }}" \
             --header "Accept: application/json" > transition.json
           cat transition.json
           transition_id=$(cat transition.json | jq -r '.transitions[] | select(.to.statusCategory.key == "done") | .id')
@@ -283,8 +290,8 @@ jobs:
       - name: Change reviewer issue status
         run: |
           curl -s --request POST \
-          --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}/transitions" \
-          --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+          --url "${{ env.EV_JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}/transitions" \
+          --user "${{ env.EV_JIRA_USER_EMAIL }}:${{ env.EV_JIRA_API_TOKEN }}" \
           --header "Accept: application/json" \
           --header "Content-Type: application/json" \
           --data '{
@@ -313,15 +320,15 @@ jobs:
           echo "REVIEWED_REVIEWERS=${REVIEWED_REVIEWERS}";
           
           response=$(curl -s --request GET \
-            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
-            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --url "${{ env.EV_JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
+            --user "${{ env.EV_JIRA_USER_EMAIL }}:${{ env.EV_JIRA_API_TOKEN }}" \
             --header "Accept: application/json")
           parent_key=$(echo "$response" | jq -r '.fields.parent.key')
           echo "parent_key=${parent_key}"
           
           curl -s --request GET \
-            --url "${{ env.JIRA_URL }}/rest/api/3/field" \
-            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --url "${{ env.EV_JIRA_URL }}/rest/api/3/field" \
+            --user "${{ env.EV_JIRA_USER_EMAIL }}:${{ env.EV_JIRA_API_TOKEN }}" \
             --header "Content-Type: application/json" > all_fields.json
           
           first_review_time_field_id=$(jq -r --arg name "first_review_time" '.[] | select(.name == "first_review_time") | .id' all_fields.json)
@@ -332,8 +339,8 @@ jobs:
           
           # First review - update first_review_time field                    
           response=$(curl -s --request GET \
-            --url "${{ env.JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
-            --user "${{ env.JIRA_USER_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            --url "${{ env.EV_JIRA_URL }}/rest/api/3/issue/${{ steps.search.outputs.issue }}" \
+            --user "${{ env.EV_JIRA_USER_EMAIL }}:${{ env.EV_JIRA_API_TOKEN }}" \
             --header "Accept: application/json")
           first_review_time=$(echo "$response" | jq -r ".fields.${first_review_time_field_id}")
           echo "first_review_time=$first_review_time"
