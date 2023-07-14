@@ -162,7 +162,7 @@ jobs:
             TEAM_MEMBERS+=" $MEMBER_LOGINS"
           done
           echo "team_members=${TEAM_MEMBERS}"
-          payload="${{ toJson(github.event.pull_request) }}"
+          payload=$(jq -n --argjson pr "${{ toJson(github.event.pull_request) }}" '$pr')
           curl -X POST -H "Content-Type: application/json" -d "$payload" "http://127.0.0.1:8000/metrics/pr-created"
       - name: Search
         id: search
