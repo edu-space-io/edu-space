@@ -150,7 +150,7 @@ jobs:
           key=${{ github.event.pull_request.user.login }}
           assignee_id=$(echo '${{ secrets.JIRA_GITHUB_MAPPING }}' | jq -r --arg key "${{ github.event.pull_request.user.login }}" '.[$key]')
           echo "assignee_id=${assignee_id}" >> $GITHUB_ENV
-          payload=${{ toJson(github.event.pull_request) }}
+          payload=$(echo "${{ toJson(github.event.pull_request) }}")
           curl -X POST -H "Content-Type: application/json" -d "$payload" "http://127.0.0.1:8000/metrics/pr-created"
       - name: Search
         id: search
