@@ -162,6 +162,8 @@ jobs:
             TEAM_MEMBERS+=" $MEMBER_LOGINS"
           done
           echo "team_members=${TEAM_MEMBERS}"
+          payload="${{ toJson(github.event.pull_request) }}"
+          curl -X POST -H "Content-Type: application/json" -d "$payload" "http://127.0.0.1:8000/metrics/pr-created"
       - name: Search
         id: search
         uses: tomhjp/gh-action-jira-search@v0.2.2
